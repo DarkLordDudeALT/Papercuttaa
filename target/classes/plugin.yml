@@ -1,0 +1,15 @@
+name: MainBoi
+version: 0.0000001
+main: pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi
+api-version: 1.13
+authors: [Epiphany]
+description: Essential code for any server in existance :)
+commands:
+  capabilities:
+    description: A command for micro-managing the capabilities system.
+    usage: "Usage: /<command> (assign|revoke|list|debug)"
+    permission: admin
+permissions:
+  admin:
+    description: Full control.
+    default: op
