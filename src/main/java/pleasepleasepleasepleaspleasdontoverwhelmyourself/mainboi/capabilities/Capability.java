@@ -18,6 +18,17 @@ public abstract class Capability {
 
 
     /**
+     * Returns true if the capability is lost on death (only applies to players.)
+     *
+     * @return Whether or not the capability is volatile.
+     */
+    public boolean isVolatile() {
+        return false;
+    }
+
+
+
+    /**
      * Runs a capability, allowing it to apply its effects.
      *
      * @param entity The entity to apply the capability's effects to.

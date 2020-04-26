@@ -9,6 +9,7 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.Geneti
 
 import java.util.Objects;
 
+// TODO Add the ability for players to set their spawn at campfires.
 
 public final class MainBoi extends JavaPlugin {
     private static MainBoi instance;
@@ -24,7 +25,7 @@ public final class MainBoi extends JavaPlugin {
         pluginManager.registerEvents(capabilitiesCore, this);
         pluginManager.registerEvents(new GeneticsCore(), this);
 
-        // Registering command executors
+        // Registering command executors and tab completers.
         PluginCommand capabilitiesCommand = Objects.requireNonNull(getCommand("capabilities"));
         capabilitiesCommand.setExecutor(capabilitiesCore);
         capabilitiesCommand.setTabCompleter(capabilitiesCore);

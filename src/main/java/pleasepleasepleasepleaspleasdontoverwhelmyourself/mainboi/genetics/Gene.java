@@ -13,4 +13,9 @@ public abstract class Gene extends Capability {
      * @return The variant code.
      */
     public abstract byte getVariantCode();
+
+    @Override
+    public boolean isVolatile() {
+        return true;
+    }
 }

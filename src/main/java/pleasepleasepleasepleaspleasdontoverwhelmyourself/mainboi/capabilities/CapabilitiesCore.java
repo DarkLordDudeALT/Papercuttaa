@@ -14,6 +14,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -24,12 +25,11 @@ import java.util.*;
 import java.util.logging.Logger;
 
 // TODO Add a collector that gets rid of unnecessary entities in the queue.
-// TODO Have «/capabilities list (entity)» list the capabilities an entity has.
 // TODO Have debugInterval be loaded to and from a file on plugin shutdown and startup.
 
 // TODO Add a isVolatile() function that tells if the capability is lost on death.
 
-// TODO Create a risk of rain elite capabilities.
+// TODO Create risk of rain elite capabilities.
 
 /**
  * The code used to manage capabilities.
@@ -208,6 +208,21 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
         if (!(entity instanceof Player))
             ENTITY_CAPABILITY_QUEUE.remove(entity);
+    }
+
+    /**
+     * Removes volatile capabilities on player death.
+     */
+    @EventHandler
+    public static void onPlayerDeath(PlayerDeathEvent playerDeathEvent) {
+        if (!playerDeathEvent.isCancelled()) {
+            Player player = playerDeathEvent.getEntity();
+            Collection<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                if (capability.isVolatile())
+                    CapabilitiesCore.revokeCapability(player, capability);
+        }
     }
 
     /**
