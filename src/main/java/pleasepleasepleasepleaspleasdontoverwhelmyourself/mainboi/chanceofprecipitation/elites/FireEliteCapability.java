@@ -16,13 +16,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
 
-import java.util.Collection;
 import java.util.Set;
 
 // TODO Make it so the fire dispersion only works if the entity is not on the fire.
 // TODO Add red title with «Blazing» to elites without a custom name.
 // TODO Have projectiles fired by fire elites be set aflame.
+
+// TODO Make a list of replaceable blocks.
+// TODO Make the fire trail replace only blocks in that list, rather than air.
 
 public class FireEliteCapability extends Capability implements Listener {
     @Override
@@ -74,10 +77,8 @@ public class FireEliteCapability extends Capability implements Listener {
             AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
             AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-            if (maxHealth != null)
-                maxHealth.addModifier(new AttributeModifier("COP_FE-M", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-            if (attackDamage != null)
-                attackDamage.addModifier(new AttributeModifier("COP_FE-M", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
         }
     }
 
@@ -89,25 +90,8 @@ public class FireEliteCapability extends Capability implements Listener {
             AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
             AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-            if (maxHealth != null) {
-                Collection<AttributeModifier> attributeModifiers = maxHealth.getModifiers();
-
-                if (!attributeModifiers.isEmpty())
-                    for (AttributeModifier attributeModifier : attributeModifiers)
-                        if (attributeModifier.getName().equals("COP_FE-M")) {
-                            maxHealth.removeModifier(attributeModifier);
-                        }
-            }
-
-            if (attackDamage != null) {
-                Collection<AttributeModifier> attributeModifiers = attackDamage.getModifiers();
-
-                if (!attributeModifiers.isEmpty())
-                    for (AttributeModifier attributeModifier : attributeModifiers)
-                        if (attributeModifier.getName().equals("COP_FE-M")) {
-                            attackDamage.removeModifier(attributeModifier);
-                        }
-            }
+            AttributeHelper.removeModifiers(maxHealth, "COP_FE-M2", true);
+            AttributeHelper.removeModifiers(attackDamage, "COP_FE-M2", true);
         }
 
         Block feetBlock = entity.getWorld().getBlockAt(entity.getLocation());

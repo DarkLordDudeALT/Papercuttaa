@@ -1,4 +1,4 @@
-package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi;
+package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;

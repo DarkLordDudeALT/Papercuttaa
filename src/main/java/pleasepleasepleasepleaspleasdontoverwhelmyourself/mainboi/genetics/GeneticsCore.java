@@ -10,18 +10,18 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.genes.
 
 public final class GeneticsCore implements Listener {
     public static void onEnable() {
-        StrengthGene strengthGene = new StrengthGene((byte) 0b00);
+        PluginManager pluginManager = MainBoi.getInstance().getServer().getPluginManager();
 
         // Registering genes
         try {
+            StrengthGene strengthGene = new StrengthGene((byte) 0b00);
+
             CapabilitiesCore.registerCapability(strengthGene);
             CapabilitiesCore.registerCapability(new StrengthGene((byte) 0b01));
             CapabilitiesCore.registerCapability(new StrengthGene((byte) 0b10));
 
-        } catch (CapabilitiesCore.DuplicateRegistryNameException ignore) {}
+            pluginManager.registerEvents(strengthGene, MainBoi.getInstance());
 
-        // Registering event listeners.
-        PluginManager pluginManager = MainBoi.getInstance().getServer().getPluginManager();
-        pluginManager.registerEvents(strengthGene, MainBoi.getInstance());
+        } catch (CapabilitiesCore.DuplicateRegistryNameException ignore) {}
     }
 }

@@ -12,6 +12,8 @@ import java.util.Objects;
 
 // TODO Add the ability for players to set their spawn at campfires.
 
+// TODO Add Very Hard difficulty, which does normal difficulty things on top of
+
 public final class MainBoi extends JavaPlugin {
     private static MainBoi instance;
 

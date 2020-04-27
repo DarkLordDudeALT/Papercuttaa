@@ -14,19 +14,12 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.Gene;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
 
-import java.util.Collection;
 import java.util.Set;
 
-/**
- * Gene allele frequency:
- *  rr: 0.80644187772, rR/Rr: 0.12829694323, RR: 0.02537117903
- * Gene frequency:
- *  100%
- *
- * r = normal speed, strength, and jump height.
- * R = faster speed, more strength and higher jump height.
- */
+// TODO Increase knockback dealt by the strength gene.
+
 public class StrengthGene extends Gene implements Listener {
     private final byte variantCode;
 
@@ -148,27 +141,22 @@ public class StrengthGene extends Gene implements Listener {
         AttributeInstance armorToughness = livingEntity.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS);
         AttributeInstance flyingSpeed = livingEntity.getAttribute(Attribute.GENERIC_FLYING_SPEED);
 
-        addAttributeModifiers(movementSpeed, multiplier);
-        addAttributeModifiers(attackDamage, multiplier);
-        addAttributeModifiers(armor, multiplier);
-        addAttributeModifiers(knockbackResist, multiplier);
-        addAttributeModifiers(maxHealth, multiplier);
-        addAttributeModifiers(attackSpeed, multiplier);
-        addAttributeModifiers(armorToughness, multiplier);
-        addAttributeModifiers(flyingSpeed, multiplier);
-    }
-
-    /**
-     * Adds the attribute modifiers of the strength gene to an attribute.
-     *
-     * @param attribute The attribute to add the modifiers to.
-     * @param multiplier The amount to scale by and add back to the original value.
-     */
-    private static void addAttributeModifiers(AttributeInstance attribute, double multiplier) {
-        if (attribute != null) {
-            attribute.addModifier(new AttributeModifier("G_ST-A", 0.003, AttributeModifier.Operation.ADD_NUMBER));
-            attribute.addModifier(new AttributeModifier("G_ST-M", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        }
+        AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(armor, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(armor, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(knockbackResist, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(knockbackResist, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(attackSpeed, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(attackSpeed, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(armorToughness, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(armorToughness, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
+        AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
     }
 
     /**
@@ -186,41 +174,21 @@ public class StrengthGene extends Gene implements Listener {
         AttributeInstance armorToughness = livingEntity.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS);
         AttributeInstance flyingSpeed = livingEntity.getAttribute(Attribute.GENERIC_FLYING_SPEED);
 
-        revertAttributeModifiers(movementSpeed);
-        revertAttributeModifiers(attackDamage);
-        revertAttributeModifiers(armor);
-        revertAttributeModifiers(knockbackResist);
-        revertAttributeModifiers(maxHealth);
-        revertAttributeModifiers(attackSpeed);
-        revertAttributeModifiers(armorToughness);
-        revertAttributeModifiers(flyingSpeed);
-    }
-
-    private static final AttributeModifier[] modifierBuffer = new AttributeModifier[2];
-
-    /**
-     * Gets rid of the attribute modifiers that the strength gene adds from attributes.
-     *
-     * @param attribute The attribute to revert the modifiers of.
-     */
-    private static void revertAttributeModifiers(AttributeInstance attribute) {
-        if (attribute != null) {
-            Collection<AttributeModifier> attributeModifiers = attribute.getModifiers();
-
-            if (!attributeModifiers.isEmpty()) {
-                for (AttributeModifier attributeModifier : attributeModifiers) {
-                    String attributeName = attributeModifier.getName();
-
-                    if (attributeName.equals("G_ST-A")) {
-                        modifierBuffer[0] = attributeModifier;
-
-                    } else if (attributeName.equals("G_ST-M"))
-                        modifierBuffer[1] = attributeModifier;
-                }
-
-                attribute.removeModifier(modifierBuffer[0]);
-                attribute.removeModifier(modifierBuffer[1]);
-            }
-        }
+        AttributeHelper.removeModifiers(movementSpeed, "G_ST-A", true);
+        AttributeHelper.removeModifiers(movementSpeed, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(attackDamage, "G_ST-A", true);
+        AttributeHelper.removeModifiers(attackDamage, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(armor, "G_ST-A", true);
+        AttributeHelper.removeModifiers(armor, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(knockbackResist, "G_ST-A", true);
+        AttributeHelper.removeModifiers(knockbackResist, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(maxHealth, "G_ST-A", true);
+        AttributeHelper.removeModifiers(maxHealth, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(attackSpeed, "G_ST-A", true);
+        AttributeHelper.removeModifiers(attackSpeed, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(armorToughness, "G_ST-A", true);
+        AttributeHelper.removeModifiers(armorToughness, "G_ST-M1", true);
+        AttributeHelper.removeModifiers(flyingSpeed, "G_ST-A", true);
+        AttributeHelper.removeModifiers(flyingSpeed, "G_ST-M1", true);
     }
 }

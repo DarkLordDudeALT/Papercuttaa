@@ -18,18 +18,18 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
-import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.CommandHelper;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.CommandHelper;
 
 import java.util.*;
 import java.util.logging.Logger;
 
 // TODO Add commands to set the interval time of the collector and the assimilator.
 // TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
+
 // TODO Make /capabilities assign tell you if the entity(ies) already has(ve) the capability being assigned.
 // TODO Make /capabilities revoke tell you if the entity(ies) doesn't have the capability being assigned.
 // TODO Make /capabilities revoke __all tell you if the entity(ies) doesn't have any capabilities.
-// TODO Make the tab completion of /capabilities revoke show only the capabilities the selector has and __all.
 
 /**
  * The code used to manage capabilities.
@@ -371,7 +371,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                     debugRunnable = new BukkitRunnable() { @Override public void run() {
                                         logEntityQueueDump();
                                     }};
-                                    debugRunnable.runTaskTimer(MainBoi.getInstance(), 60, debugLoggerInterval);
+                                    debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
 
                                     sender.sendMessage("Debugging has been started, will log every " + debugLoggerInterval + " ticks.");
 
@@ -408,7 +408,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                             debugRunnable = new BukkitRunnable() { @Override public void run() {
                                                 logEntityQueueDump();
                                             }};
-                                            debugRunnable.runTaskTimer(MainBoi.getInstance(), 60, debugLoggerInterval);
+                                            debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
                                         }
 
                                         sender.sendMessage("Debug interval successfully set to " + debugLoggerInterval + " ticks.");
