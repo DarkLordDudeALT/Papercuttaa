@@ -5,6 +5,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.ChanceOfPercipitationCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.GeneticsCore;
 
 import java.util.Objects;
@@ -30,8 +31,9 @@ public final class MainBoi extends JavaPlugin {
         capabilitiesCommand.setExecutor(capabilitiesCore);
         capabilitiesCommand.setTabCompleter(capabilitiesCore);
 
-        GeneticsCore.onEnable();
         CapabilitiesCore.onEnable();
+        GeneticsCore.onEnable();
+        ChanceOfPercipitationCore.onEnable();
 
         // Starts onTick function.
         new BukkitRunnable() {@Override public void run() {

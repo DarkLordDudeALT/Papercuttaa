@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,7 +21,12 @@ public final class CommandHelper {
      * @return A list of entities fitting the selector.
      */
     public static List<Entity> getCommandTargets(CommandSender sender, String selector) {
-        List<Entity> targets = Bukkit.selectEntities(sender, selector);
+        List<Entity> targets = new ArrayList<>();
+
+        try {
+            targets.addAll(Bukkit.selectEntities(sender, selector));
+
+        } catch (IllegalArgumentException ignore) {}
 
         if (targets.isEmpty()) {
             Player target = Bukkit.getPlayerExact(selector);

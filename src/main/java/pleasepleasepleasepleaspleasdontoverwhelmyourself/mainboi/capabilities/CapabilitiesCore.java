@@ -29,8 +29,7 @@ import java.util.logging.Logger;
 // TODO Make /capabilities assign tell you if the entity(ies) already has(ve) the capability being assigned.
 // TODO Make /capabilities revoke tell you if the entity(ies) doesn't have the capability being assigned.
 // TODO Make /capabilities revoke __all tell you if the entity(ies) doesn't have any capabilities.
-
-// TODO Create risk of rain elite capabilities.
+// TODO Make the tab completion of /capabilities revoke show only the capabilities the selector has and __all.
 
 /**
  * The code used to manage capabilities.
@@ -46,25 +45,19 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     private static final HashMap<Entity, Set<Capability>> ENTITY_CAPABILITY_QUEUE = new HashMap<>();
     // Stores registered capabilities, allowing easy String -> Capability conversion.
     private static final HashMap<String, Capability> CAPABILITIES_REGISTRY = new HashMap<>();
-    private static final long collectorRunInterval = 1200;
-    private static final long assimilatorRunInterval = 1200;
 
     public static void onEnable() {
-        for (World world : Bukkit.getWorlds())
-            for (Entity entity : world.getEntities()) {
-                Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
-
-                if (!entityCapabilities.isEmpty())
-                    ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
-            }
+        new BukkitRunnable() { @Override public void run() {
+            runAssimilator();
+        }}.runTaskTimer(MainBoi.getInstance(), 100, assimilatorRunInterval);
 
         new BukkitRunnable() { @Override public void run() {
             runCollector();
-        }}.runTaskTimer(MainBoi.getInstance(), collectorRunInterval, collectorRunInterval);
-        new BukkitRunnable() { @Override public void run() {
-            runAssimilator();
-        }}.runTaskTimer(MainBoi.getInstance(), assimilatorRunInterval, assimilatorRunInterval);
+        }}.runTaskTimer(MainBoi.getInstance(), 100, collectorRunInterval);
     }
+
+    // The amount of time to wait between each run of the collector.
+    private static final long collectorRunInterval = 1200;
 
     /**
      * Runs through the Entity Queue, getting rid of entities with no capabilities, and fixes discrepancies with it and entity tags.
@@ -80,6 +73,9 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
         }
     }
+
+    // The amount of time to wait between each run of the assimilator.
+    private static final long assimilatorRunInterval = 1200;
 
     /**
      * Runs through all loaded entities, looking for those with capabilities that are not in the queue, so that it can add them.
@@ -171,19 +167,18 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 String capabilityName = capability.getCapabilityName();
                 
                 capability.onRevoke(entity);
-
                 entity.removeScoreboardTag(capabilityName);
 
                 Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
-
-                if (entity instanceof Player && entity.isOp())
-                    entity.sendMessage("The capability, " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ", has been revoked from you.");
 
                 if (entityCapabilities.isEmpty()) {
                     ENTITY_CAPABILITY_QUEUE.remove(entity);
 
                 } else
                     ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
+
+                if (entity instanceof Player && entity.isOp())
+                    entity.sendMessage("The capability, " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ", has been revoked from you.");
             }
 
         } else
@@ -582,13 +577,30 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
         } else if (args.length >= 1)
             switch (args[0].toLowerCase()) {
                 case "assign":
+                    if (args.length == 2) {
+                        arguments = null;
+
+                    } else if (args.length == 3)
+                        arguments.addAll(CAPABILITIES_REGISTRY.keySet());
+
+                    break;
+
                 case "revoke":
                     if (args.length == 2) {
                         arguments = null;
 
                     } else if (args.length == 3) {
-                        arguments.addAll(CAPABILITIES_REGISTRY.keySet());
-                        arguments.add("__all");
+                        List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
+                        Set<Capability> targetsCapabilities = new HashSet<>();
+
+                        for (Entity target : targets)
+                            targetsCapabilities.addAll(getCapabilities(target));
+
+                        for (Capability capability : targetsCapabilities)
+                            arguments.add(capability.getCapabilityName());
+
+                        if (!targetsCapabilities.isEmpty())
+                            arguments.add("__all");
                     }
 
                     break;
