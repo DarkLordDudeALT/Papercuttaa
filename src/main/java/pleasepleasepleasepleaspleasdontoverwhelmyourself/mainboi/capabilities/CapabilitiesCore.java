@@ -24,10 +24,11 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import java.util.*;
 import java.util.logging.Logger;
 
-// TODO Add a collector that gets rid of unnecessary entities in the queue.
-// TODO Have debugInterval be loaded to and from a file on plugin shutdown and startup.
-
-// TODO Add a isVolatile() function that tells if the capability is lost on death.
+// TODO Add commands to set the interval time of the collector and the assimilator.
+// TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
+// TODO Make /capabilities assign tell you if the entity(ies) already has(ve) the capability being assigned.
+// TODO Make /capabilities revoke tell you if the entity(ies) doesn't have the capability being assigned.
+// TODO Make /capabilities revoke __all tell you if the entity(ies) doesn't have any capabilities.
 
 // TODO Create risk of rain elite capabilities.
 
@@ -45,6 +46,69 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     private static final HashMap<Entity, Set<Capability>> ENTITY_CAPABILITY_QUEUE = new HashMap<>();
     // Stores registered capabilities, allowing easy String -> Capability conversion.
     private static final HashMap<String, Capability> CAPABILITIES_REGISTRY = new HashMap<>();
+    private static final long collectorRunInterval = 1200;
+    private static final long assimilatorRunInterval = 1200;
+
+    public static void onEnable() {
+        for (World world : Bukkit.getWorlds())
+            for (Entity entity : world.getEntities()) {
+                Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
+
+                if (!entityCapabilities.isEmpty())
+                    ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
+            }
+
+        new BukkitRunnable() { @Override public void run() {
+            runCollector();
+        }}.runTaskTimer(MainBoi.getInstance(), collectorRunInterval, collectorRunInterval);
+        new BukkitRunnable() { @Override public void run() {
+            runAssimilator();
+        }}.runTaskTimer(MainBoi.getInstance(), assimilatorRunInterval, assimilatorRunInterval);
+    }
+
+    /**
+     * Runs through the Entity Queue, getting rid of entities with no capabilities, and fixes discrepancies with it and entity tags.
+     */
+    private static void runCollector() {
+        for (Entity entity : ENTITY_CAPABILITY_QUEUE.keySet()) {
+            Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
+
+            if (entityCapabilities.isEmpty()) {
+                ENTITY_CAPABILITY_QUEUE.remove(entity);
+
+            } else if (!entityCapabilities.equals(getCapabilities(entity)))
+                ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
+        }
+    }
+
+    /**
+     * Runs through all loaded entities, looking for those with capabilities that are not in the queue, so that it can add them.
+     */
+    private static void runAssimilator() {
+        for (World world : Bukkit.getWorlds())
+            for (Entity entity : world.getEntities())
+                if (!ENTITY_CAPABILITY_QUEUE.containsKey(entity)) {
+                    Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
+
+                    if (!entityCapabilities.isEmpty())
+                        ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
+                }
+    }
+
+    /**
+     * Runs the capabilities for the entities in the queue.
+     */
+    public static void tickCapabilities() {
+        for (Map.Entry<Entity, Set<Capability>> entityQueueEntry : ENTITY_CAPABILITY_QUEUE.entrySet()) {
+            Entity entity = entityQueueEntry.getKey();
+            Set<Capability> entityCapabilities = entityQueueEntry.getValue();
+
+            for (Capability entityCapability : entityCapabilities)
+                entityCapability.runCapability(entity);
+        }
+    }
+
+
 
     /**
      * Registers capabilities to the capabilities system.
@@ -85,7 +149,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 entity.addScoreboardTag(capabilityName);
                 ENTITY_CAPABILITY_QUEUE.put(entity, getCapabilitiesFromTags(entity));
 
-                if (entity instanceof Player)
+                if (entity instanceof Player && entity.isOp())
                     entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ".");
 
                 capability.onAssignment(entity);
@@ -112,7 +176,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                 Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
 
-                if (entity instanceof Player)
+                if (entity instanceof Player && entity.isOp())
                     entity.sendMessage("The capability, " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ", has been revoked from you.");
 
                 if (entityCapabilities.isEmpty()) {
@@ -157,19 +221,6 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     }
 
 
-
-    /**
-     * Runs the capabilities for the entities in the queue.
-     */
-    public static void tickCapabilities() {
-        for (Map.Entry<Entity, Set<Capability>> entityQueueEntry : ENTITY_CAPABILITY_QUEUE.entrySet()) {
-            Entity entity = entityQueueEntry.getKey();
-            Set<Capability> entityCapabilities = entityQueueEntry.getValue();
-
-            for (Capability entityCapability : entityCapabilities)
-                entityCapability.runCapability(entity);
-        }
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // The following 4 event handlers control the loading and unloading of entities to and from the entity queue. //
@@ -223,19 +274,6 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 if (capability.isVolatile())
                     CapabilitiesCore.revokeCapability(player, capability);
         }
-    }
-
-    /**
-     * Loads entities onto the queue during reloads.
-     */
-    public static void onEnable() {
-        for (World world : Bukkit.getWorlds())
-            for (Entity entity : world.getEntities()) {
-                Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
-
-                if (!entityCapabilities.isEmpty())
-                    ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
-            }
     }
 
 
@@ -548,8 +586,10 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                     if (args.length == 2) {
                         arguments = null;
 
-                    } else if (args.length == 3)
+                    } else if (args.length == 3) {
                         arguments.addAll(CAPABILITIES_REGISTRY.keySet());
+                        arguments.add("__all");
+                    }
 
                     break;
 
