@@ -1,5 +1,6 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.elites;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -7,9 +8,11 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -21,8 +24,6 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.Attribu
 import java.util.Set;
 
 // TODO Make it so the fire dispersion only works if the entity is not on the fire.
-// TODO Add red title with «Blazing» to elites without a custom name.
-// TODO Have projectiles fired by fire elites be set aflame.
 
 // TODO Make a list of replaceable blocks.
 // TODO Make the fire trail replace only blocks in that list, rather than air.
@@ -80,6 +81,12 @@ public class FireEliteCapability extends Capability implements Listener {
             AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
             AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
         }
+
+        // Gives fire elites a title if they don't have a custom name already.
+        if (!(entity instanceof Player) && entity.getCustomName() == null) {
+            entity.setCustomName(ChatColor.RED + "Blazing " + entity.getName());
+            entity.setCustomNameVisible(true);
+        }
     }
 
     @Override
@@ -101,6 +108,16 @@ public class FireEliteCapability extends Capability implements Listener {
 
         if (entity.getFireTicks() > 0)
             entity.setFireTicks(0);
+
+        // Removes a fire elite's title, if they have one.
+        if (!(entity instanceof Player)) {
+            String entityCustomName = entity.getCustomName();
+
+            if (entityCustomName != null && entityCustomName.contains(ChatColor.RED + "Blazing")) {
+                entity.setCustomName(null);
+                entity.setCustomNameVisible(false);
+            }
+        }
     }
 
 
@@ -119,6 +136,25 @@ public class FireEliteCapability extends Capability implements Listener {
                     Entity victim = entityDamageByEntityEvent.getEntity();
 
                     victim.setFireTicks(victim.getFireTicks() + 160);
+
+                    break;
+                }
+        }
+    }
+
+    /**
+     * Makes all arrows shot by fire elites be set aflame.
+     */
+    @EventHandler
+    public static void onEntityShootBow(EntityShootBowEvent entityShootBowEvent) {
+        if (!entityShootBowEvent.isCancelled()) {
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(entityShootBowEvent.getEntity());
+
+            for (Capability capability : entityCapabilities)
+                if (capability instanceof FireEliteCapability) {
+                    Entity projectile = entityShootBowEvent.getProjectile();
+
+                    projectile.setFireTicks(2000);
 
                     break;
                 }
