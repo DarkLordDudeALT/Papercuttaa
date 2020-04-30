@@ -3,6 +3,9 @@ package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 
+// TODO Allow create a variant of addModifierSafely() that can apply multiple modifiers at once.
+// TODO Make add and revoke modifier functions specifically for maxHealth that scales an entities health to it's new maximum.
+
 /**
  * Code to help manage entity attributes.
  */

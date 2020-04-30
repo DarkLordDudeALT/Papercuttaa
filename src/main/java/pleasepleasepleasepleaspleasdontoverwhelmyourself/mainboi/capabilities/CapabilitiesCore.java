@@ -27,9 +27,7 @@ import java.util.logging.Logger;
 // TODO Add commands to set the interval time of the collector and the assimilator.
 // TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
 
-// TODO Make /capabilities assign tell you if the entity(ies) already has(ve) the capability being assigned.
-// TODO Make /capabilities revoke tell you if the entity(ies) doesn't have the capability being assigned.
-// TODO Make /capabilities revoke __all tell you if the entity(ies) doesn't have any capabilities.
+// TODO Have /capabilities assign and /capabilities assign display how many entities were affected, rather than how many were checked.
 
 /**
  * The code used to manage capabilities.
@@ -134,10 +132,12 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     /**
      * Assigns a capability to an entity.
      *
-     * @param entity     The entity to assign with the capability.
+     * @param entity The entity to assign with the capability.
      * @param capability The capability to assign.
+     *
+     * @return If the capability was successfully assigned.
      */
-    public static void assignCapability(Entity entity, Capability capability) throws UnsupportedOperationException {
+    public static boolean assignCapability(Entity entity, Capability capability) throws UnsupportedOperationException {
         if (CAPABILITIES_REGISTRY.containsValue(capability)) {
             if (!getCapabilities(entity).contains(capability)) {
                 String capabilityName = capability.getCapabilityName();
@@ -149,19 +149,25 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                     entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ".");
 
                 capability.onAssignment(entity);
+
+                return true;
             }
 
         } else
             throw new UnsupportedOperationException(capability.getCapabilityName() + " is not a registered capability. Capabilities must be registered before they can be assigned.");
+
+        return false;
     }
 
     /**
      * Revokes a capability from an entity.
      *
-     * @param entity     The entity to revoke the capability from.
+     * @param entity The entity to revoke the capability from.
      * @param capability The capability to revoke.
+     *
+     * @return If the capability was successfully revoked.
      */
-    public static void revokeCapability(Entity entity, Capability capability) throws UnsupportedOperationException {
+    public static boolean revokeCapability(Entity entity, Capability capability) throws UnsupportedOperationException {
         if (CAPABILITIES_REGISTRY.containsValue(capability)) {
             if (getCapabilities(entity).contains(capability)) {
                 String capabilityName = capability.getCapabilityName();
@@ -179,10 +185,14 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                 if (entity instanceof Player && entity.isOp())
                     entity.sendMessage("The capability, " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ", has been revoked from you.");
+
+                return true;
             }
 
         } else
             throw new UnsupportedOperationException(capability.getCapabilityName() + " is not a registered capability. Capabilities must be registered before they can be revoked.");
+
+        return false;
     }
 
     /**
@@ -446,15 +456,26 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                             } else if (targets.size() == 1) {
                                 Entity target = targets.get(0);
-                                assignCapability(target, capability);
+                                boolean success = assignCapability(target, capability);
 
-                                sender.sendMessage("Assigned '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' to " + target.getName() + ".");
+                                if (success) {
+                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' to " + target.getName() + ".");
+
+                                } else
+                                    sender.sendMessage(ChatColor.RED + "The entity already has this capability");
 
                             } else {
-                                for (Entity target : targets)
-                                    assignCapability(target, capability);
+                                boolean success = false;
 
-                                sender.sendMessage("Assigned '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' to " + targets.size() + " entities.");
+                                for (Entity target : targets)
+                                    if (assignCapability(target, capability))
+                                        success = true;
+
+                                if (success) {
+                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' to " + targets.size() + " entities.");
+
+                                } else
+                                    sender.sendMessage(ChatColor.RED + "All of the entities already have this capability.");
                             }
 
                         } else
@@ -479,20 +500,34 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 Entity target = targets.get(0);
                                 Set<Capability> targetCapabilities = getCapabilities(target);
 
-                                for (Capability capability : targetCapabilities)
-                                    revokeCapability(target, capability);
+                                if (targetCapabilities.isEmpty()) {
+                                    sender.sendMessage(ChatColor.RED + "The entity has no capabilities.");
 
-                                sender.sendMessage("Revoked all capabilities from " + target.getName() + ".");
+                                } else {
+                                    for (Capability capability : targetCapabilities)
+                                        revokeCapability(target, capability);
+
+                                    sender.sendMessage("Revoked all capabilities from " + target.getName() + ".");
+                                }
 
                             } else {
+                                boolean noCapabilities = true;
+
                                 for (Entity target : targets) {
                                     Set<Capability> targetCapabilities = getCapabilities(target);
+
+                                    if (noCapabilities && !targetCapabilities.isEmpty())
+                                        noCapabilities = false;
 
                                     for (Capability capability : targetCapabilities)
                                         revokeCapability(target, capability);
                                 }
 
-                                sender.sendMessage("Revoked all capabilities from " + targets.size() + " entities.");
+                                if (noCapabilities) {
+                                    sender.sendMessage(ChatColor.RED + "All of the entities have no capabilities.");
+
+                                } else
+                                    sender.sendMessage("Revoked all capabilities from " + targets.size() + " entities.");
                             }
 
                         } else {
@@ -506,19 +541,30 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                                 } else if (targets.size() == 1) {
                                     Entity target = targets.get(0);
-                                    revokeCapability(target, capability);
+                                    boolean success = revokeCapability(target, capability);
 
-                                    sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + target.getName() + ".");
+                                    if (success) {
+                                        sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + target.getName() + ".");
+
+                                    } else
+                                        sender.sendMessage(ChatColor.RED + "The entity does not have this capability.");
 
                                 } else {
-                                    for (Entity target : targets)
-                                        revokeCapability(target, capability);
+                                    boolean success = false;
 
-                                    sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + targets.size() + " entities.");
+                                    for (Entity target : targets)
+                                        if (revokeCapability(target, capability))
+                                            success = true;
+
+                                    if (success) {
+                                        sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + targets.size() + " entities.");
+
+                                    } else
+                                        sender.sendMessage(ChatColor.RED + "None of the entities have this capability.");
                                 }
 
                             } else
-                                sender.sendMessage(ChatColor.RED + "'" + args[2] + "' is not a known capability");
+                                sender.sendMessage(ChatColor.RED + "'" + args[2] + "' is not a known capability.");
                         }
 
                     } else

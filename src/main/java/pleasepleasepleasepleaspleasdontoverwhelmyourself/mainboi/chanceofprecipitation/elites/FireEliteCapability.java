@@ -1,6 +1,7 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.elites;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -23,7 +24,7 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.Attribu
 
 import java.util.Set;
 
-// TODO Make it so the fire dispersion only works if the entity is not on the fire.
+// TODO Make the fire trail place fires in a hashmap, so that it isn't creating 25 different runnables every time.
 
 // TODO Make a list of replaceable blocks.
 // TODO Make the fire trail replace only blocks in that list, rather than air.
@@ -52,17 +53,27 @@ public class FireEliteCapability extends Capability implements Listener {
 
         // Spawns a trail of fire behind fire elites.
         if (entity.isOnGround()) {
-            Block feetBlock = entity.getWorld().getBlockAt(entity.getLocation());
+            Location entityLocation = entity.getLocation();
+            Block feetBlock = entity.getWorld().getBlockAt(entityLocation);
 
             if (feetBlock.getType().equals(Material.AIR) || feetBlock.getType().equals(Material.CAVE_AIR)) {
                 feetBlock.setType(Material.FIRE);
 
                 // Limits the trial length.
                 new BukkitRunnable() { @Override public void run() {
-                    if (feetBlock.getType().equals(Material.FIRE))
-                        feetBlock.setType(Material.AIR);
+                    if (feetBlock.getType().equals(Material.FIRE)) {
+                        Location newEntityLocation = entity.getLocation();
 
-                }}.runTaskLater(MainBoi.getInstance(), 60);
+                        if (entityLocation.getBlockX() != newEntityLocation.getBlockX() || entityLocation.getBlockY() != newEntityLocation.getBlockY()
+                                || entityLocation.getBlockZ() != newEntityLocation.getBlockZ()) {
+                            feetBlock.setType(Material.AIR);
+                            this.cancel();
+                        }
+
+                    } else
+                        this.cancel();
+
+                }}.runTaskTimer(MainBoi.getInstance(), 60, 60);
             }
         }
 
@@ -72,45 +83,47 @@ public class FireEliteCapability extends Capability implements Listener {
 
     @Override
     public void onAssignment(Entity entity) {
-        if (entity instanceof LivingEntity) {
-            LivingEntity livingEntity = (LivingEntity) entity;
+        if (!(entity instanceof Player)) {
+            if (entity instanceof LivingEntity) {
+                LivingEntity livingEntity = (LivingEntity) entity;
 
-            AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-            AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-            AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-            AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-        }
+                AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            }
 
-        // Gives fire elites a title if they don't have a custom name already.
-        if (!(entity instanceof Player) && entity.getCustomName() == null) {
-            entity.setCustomName(ChatColor.RED + "Blazing " + entity.getName());
-            entity.setCustomNameVisible(true);
+            // Gives fire elites a title if they don't have a custom name already.
+            if (entity.getCustomName() == null) {
+                entity.setCustomName(ChatColor.RED + "Blazing " + entity.getName());
+                entity.setCustomNameVisible(true);
+            }
         }
     }
 
     @Override
     public void onRevoke(Entity entity) {
-        if (entity instanceof LivingEntity) {
-            LivingEntity livingEntity = (LivingEntity) entity;
-
-            AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-            AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
-
-            AttributeHelper.removeModifiers(maxHealth, "COP_FE-M2", true);
-            AttributeHelper.removeModifiers(attackDamage, "COP_FE-M2", true);
-        }
-
-        Block feetBlock = entity.getWorld().getBlockAt(entity.getLocation());
-
-        if (feetBlock.getType().equals(Material.FIRE))
-            feetBlock.setType(Material.AIR);
-
-        if (entity.getFireTicks() > 0)
-            entity.setFireTicks(0);
-
-        // Removes a fire elite's title, if they have one.
         if (!(entity instanceof Player)) {
+            if (entity instanceof LivingEntity) {
+                LivingEntity livingEntity = (LivingEntity) entity;
+
+                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+
+                AttributeHelper.removeModifiers(maxHealth, "COP_FE-M2", true);
+                AttributeHelper.removeModifiers(attackDamage, "COP_FE-M2", true);
+            }
+
+            Block feetBlock = entity.getWorld().getBlockAt(entity.getLocation());
+
+            if (feetBlock.getType().equals(Material.FIRE))
+                feetBlock.setType(Material.AIR);
+
+            if (entity.getFireTicks() > 0)
+                entity.setFireTicks(0);
+
+            // Removes a fire elite's title, if they have one.
             String entityCustomName = entity.getCustomName();
 
             if (entityCustomName != null && entityCustomName.contains(ChatColor.RED + "Blazing")) {
