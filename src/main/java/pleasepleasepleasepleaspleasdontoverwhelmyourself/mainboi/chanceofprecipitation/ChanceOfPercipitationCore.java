@@ -11,7 +11,7 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipi
 
 public final class ChanceOfPercipitationCore {
     public static void onEnable() {
-        FireEliteCapability fireEliteCapability = new FireEliteCapability();
+        FireEliteCapability fireEliteCapability = new FireEliteCapability("");
 
         try {
             CapabilitiesCore.registerCapability(fireEliteCapability);

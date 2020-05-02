@@ -6,10 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,10 +21,11 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.Command
 import java.util.*;
 import java.util.logging.Logger;
 
-// TODO Add commands to set the interval time of the collector and the assimilator.
+// TODO Add /capabilities debug setInterval (collector|assimilator) to set the interval time of the collector and the assimilator.
+//  Have the debug logger follow suit.
 // TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
 
-// TODO Have /capabilities assign and /capabilities assign display how many entities were affected, rather than how many were checked.
+// TODO Have the loading and unloading event listeners preform the same operations as the collector.
 
 /**
  * The code used to manage capabilities.
@@ -45,6 +43,15 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     private static final HashMap<String, Capability> CAPABILITIES_REGISTRY = new HashMap<>();
 
     public static void onEnable() {
+        MainBoi mainBoi = MainBoi.getInstance();
+        CapabilitiesCore capabilitiesCore = new CapabilitiesCore();
+
+        mainBoi.getServer().getPluginManager().registerEvents(capabilitiesCore, mainBoi);
+
+        PluginCommand capabilitiesCommand = Objects.requireNonNull(mainBoi.getCommand("capabilities"));
+        capabilitiesCommand.setExecutor(capabilitiesCore);
+        capabilitiesCommand.setTabCompleter(capabilitiesCore);
+
         new BukkitRunnable() { @Override public void run() {
             runAssimilator();
         }}.runTaskTimer(MainBoi.getInstance(), 100, assimilatorRunInterval);
@@ -61,15 +68,49 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      * Runs through the Entity Queue, getting rid of entities with no capabilities, and fixes discrepancies with it and entity tags.
      */
     private static void runCollector() {
+        Set<Entity> removalQueue = new HashSet<>();
+
         for (Entity entity : ENTITY_CAPABILITY_QUEUE.keySet()) {
             Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
 
             if (entityCapabilities.isEmpty()) {
-                ENTITY_CAPABILITY_QUEUE.remove(entity);
+                removalQueue.add(entity);
 
-            } else if (!entityCapabilities.equals(getCapabilities(entity)))
-                ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
+            } else {
+                Set<Capability> activeEntityCapabilities = getCapabilities(entity);
+
+                for (Capability capability : entityCapabilities) {
+                    boolean hasCapability = false;
+
+                    for (Capability activeCapability : activeEntityCapabilities) {
+                        String activeCapabilityName = capability.getCapabilityName();
+                        String capabilityName = capability.getCapabilityName();
+
+                        if (capabilityName.equals(activeCapabilityName)) {
+                            hasCapability = true;
+
+                            // Overrides the capability queue's extra data onto the tags.
+                            if (!capability.getExtraData().equals(activeCapability.getExtraData()))
+                                for (String tag : entity.getScoreboardTags())
+                                    if (tag.contains(activeCapabilityName)) {
+                                        entity.removeScoreboardTag(tag);
+                                        entity.addScoreboardTag(joinNameAndExtra(activeCapabilityName, activeCapability.getExtraData()));
+
+                                        break;
+                                    }
+
+                            break;
+                        }
+                    }
+
+                    if (!hasCapability)
+                        ENTITY_CAPABILITY_QUEUE.get(entity).add(capability);
+                }
+            }
         }
+
+        for (Entity entity : removalQueue)
+            ENTITY_CAPABILITY_QUEUE.remove(entity);
     }
 
     // The amount of time to wait between each run of the assimilator.
@@ -138,15 +179,23 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      * @return If the capability was successfully assigned.
      */
     public static boolean assignCapability(Entity entity, Capability capability) throws UnsupportedOperationException {
-        if (CAPABILITIES_REGISTRY.containsValue(capability)) {
-            if (!getCapabilities(entity).contains(capability)) {
-                String capabilityName = capability.getCapabilityName();
+        String capabilityName = capability.getCapabilityName();
 
-                entity.addScoreboardTag(capabilityName);
+        if (CAPABILITIES_REGISTRY.containsKey(capabilityName)) {
+            boolean hasCapability = false;
+
+            for (Capability possibleMatch : getCapabilities(entity))
+                if (possibleMatch.getCapabilityName().equals(capabilityName)) {
+                    hasCapability = true;
+                    break;
+                }
+
+            if (!hasCapability) {
+                entity.addScoreboardTag(joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
                 ENTITY_CAPABILITY_QUEUE.put(entity, getCapabilitiesFromTags(entity));
 
                 if (entity instanceof Player && entity.isOp())
-                    entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ".");
+                    entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ".");
 
                 capability.onAssignment(entity);
 
@@ -168,26 +217,34 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      * @return If the capability was successfully revoked.
      */
     public static boolean revokeCapability(Entity entity, Capability capability) throws UnsupportedOperationException {
-        if (CAPABILITIES_REGISTRY.containsValue(capability)) {
-            if (getCapabilities(entity).contains(capability)) {
-                String capabilityName = capability.getCapabilityName();
-                
-                capability.onRevoke(entity);
-                entity.removeScoreboardTag(capabilityName);
+        String capabilityName = capability.getCapabilityName();
 
-                Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
+        if (CAPABILITIES_REGISTRY.containsKey(capabilityName)) {
+            Set<Capability> entityCapabilities = getCapabilities(entity);
 
-                if (entityCapabilities.isEmpty()) {
-                    ENTITY_CAPABILITY_QUEUE.remove(entity);
+            for (Capability possibleMatch : entityCapabilities)
+                if (possibleMatch.getCapabilityName().equals(capabilityName)) {
+                    capability.onRevoke(entity);
 
-                } else
-                    ENTITY_CAPABILITY_QUEUE.put(entity, entityCapabilities);
+                    for (String tag : entity.getScoreboardTags())
+                        if (tag.contains(capabilityName)) {
+                            entity.removeScoreboardTag(tag);
+                            break;
+                        }
 
-                if (entity instanceof Player && entity.isOp())
-                    entity.sendMessage("The capability, " + ChatColor.YELLOW + capabilityName + ChatColor.WHITE + ", has been revoked from you.");
+                    Set<Capability> trueEntityCapabilities = getCapabilitiesFromTags(entity);
 
-                return true;
-            }
+                    if (trueEntityCapabilities.isEmpty()) {
+                        ENTITY_CAPABILITY_QUEUE.remove(entity);
+
+                    } else
+                        ENTITY_CAPABILITY_QUEUE.put(entity, trueEntityCapabilities);
+
+                    if (entity instanceof Player && entity.isOp())
+                        entity.sendMessage("The capability, " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ", has been revoked from you.");
+
+                    return true;
+                }
 
         } else
             throw new UnsupportedOperationException(capability.getCapabilityName() + " is not a registered capability. Capabilities must be registered before they can be revoked.");
@@ -199,6 +256,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      * Gets the capabilities an entity has with its tags.
      *
      * @param entity The entity to get capabilities from.
+     *
      * @return The capabilities an entity has.
      */
     public static Set<Capability> getCapabilitiesFromTags(Entity entity) {
@@ -206,17 +264,55 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
         Set<Capability> entityCapabilities = new HashSet<>();
 
         // Looks for registered capabilities.
-        for (String entityTag : entityTags)
-            if (CAPABILITIES_REGISTRY.containsKey(entityTag))
-                entityCapabilities.add(CAPABILITIES_REGISTRY.get(entityTag));
+        for (String entityTag : entityTags) {
+            Capability capability = getCapabilityFromTag(entityTag);
+
+            if (capability != null)
+                entityCapabilities.add(capability);
+        }
 
         return entityCapabilities;
     }
 
     /**
+     * Gets an instance of capability from a tag, adding in any extra data the tag has.
+     *
+     * @param entityTag The tag to get the capability from.
+     *
+     * @return The capability a tag has.
+     */
+    public static Capability getCapabilityFromTag(String entityTag) {
+        String capabilityName;
+        String extraData;
+
+        // Extracts the capability name and any extra data from the tag.
+        if (entityTag.contains("-")) {
+            String[] splitTag = entityTag.split("-", 2);
+
+            capabilityName = splitTag[0];
+            extraData = splitTag[1];
+
+        } else {
+            capabilityName = entityTag;
+            extraData = "";
+        }
+
+        Capability capability;
+
+        // Creates a copy of the capability with the new data.
+        if (CAPABILITIES_REGISTRY.containsKey(capabilityName)) {
+            capability = CAPABILITIES_REGISTRY.get(capabilityName).useConstructor(extraData);
+
+        } else
+            capability = null;
+
+        return capability;
+    }
+
+    /**
      * Gets the capabilities an entity has.
-     * This methods grabs directly from the queue, instead of from entity tags, and is thus faster.
-     * Method may not be 100% accurate.
+     * This methods grabs directly from the queue, instead of from the entity tags, and is thus faster.
+     * Method may not be 100% accurate to tags.
      *
      * @param entity The entity to get capabilities from.
      * @return The capabilities an entity has.
@@ -329,15 +425,15 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 sender.sendMessage(target.getName() + " has no capabilities.");
 
                             } else if (targetCapabilities.size() == 1) {
-                                Iterator<Capability> capabilityIterator = targetCapabilities.iterator();
-                                sender.sendMessage(target.getName() + " has the capability: " + ChatColor.YELLOW + capabilityIterator.next().getCapabilityName() + ChatColor.WHITE + ".");
+                                Capability entityCapability = targetCapabilities.iterator().next();
+                                sender.sendMessage(target.getName() + " has the capability: " + ChatColor.YELLOW + joinNameAndExtra(entityCapability.getCapabilityName(), entityCapability.getExtraData()) + ChatColor.WHITE + ".");
 
                             } else {
                                 List<String> messageList = new ArrayList<>();
                                 messageList.add(target.getName() + " has the following capabilities: ");
 
                                 for (Capability capability : targetCapabilities)
-                                    messageList.add(" - " + ChatColor.GOLD + capability.getCapabilityName());
+                                    messageList.add(" - " + ChatColor.GOLD + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
 
                                 for (String message : messageList)
                                     sender.sendMessage(message);
@@ -446,7 +542,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 // Assigns capabilities to entities.
                 case "assign":
                     if (args.length >= 3) {
-                        Capability capability = CAPABILITIES_REGISTRY.get(args[2]);
+                        Capability capability = getCapabilityFromTag(args[2]);
 
                         if (capability != null) {
                             List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
@@ -459,20 +555,23 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 boolean success = assignCapability(target, capability);
 
                                 if (success) {
-                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' to " + target.getName() + ".");
+                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + "' to " + target.getName() + ".");
 
                                 } else
                                     sender.sendMessage(ChatColor.RED + "The entity already has this capability");
 
                             } else {
                                 boolean success = false;
+                                int effectedEntityCount = 0;
 
                                 for (Entity target : targets)
-                                    if (assignCapability(target, capability))
+                                    if (assignCapability(target, capability)) {
                                         success = true;
+                                        effectedEntityCount++;
+                                    }
 
                                 if (success) {
-                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' to " + targets.size() + " entities.");
+                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + "' to " + effectedEntityCount + " entities.");
 
                                 } else
                                     sender.sendMessage(ChatColor.RED + "All of the entities already have this capability.");
@@ -512,26 +611,29 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                             } else {
                                 boolean noCapabilities = true;
+                                int effectedEntityCount = 0;
 
                                 for (Entity target : targets) {
                                     Set<Capability> targetCapabilities = getCapabilities(target);
 
-                                    if (noCapabilities && !targetCapabilities.isEmpty())
+                                    if (!targetCapabilities.isEmpty()) {
                                         noCapabilities = false;
+                                        effectedEntityCount++;
 
-                                    for (Capability capability : targetCapabilities)
-                                        revokeCapability(target, capability);
+                                        for (Capability capability : targetCapabilities)
+                                            revokeCapability(target, capability);
+                                    }
                                 }
 
                                 if (noCapabilities) {
                                     sender.sendMessage(ChatColor.RED + "All of the entities have no capabilities.");
 
                                 } else
-                                    sender.sendMessage("Revoked all capabilities from " + targets.size() + " entities.");
+                                    sender.sendMessage("Revoked all capabilities from " + effectedEntityCount + " entities.");
                             }
 
                         } else {
-                            Capability capability = CAPABILITIES_REGISTRY.get(args[2]);
+                            Capability capability = getCapabilityFromTag(args[2]);
 
                             if (capability != null) {
                                 List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
@@ -551,13 +653,16 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                                 } else {
                                     boolean success = false;
+                                    int effectedEntityCount = 0;
 
                                     for (Entity target : targets)
-                                        if (revokeCapability(target, capability))
+                                        if (revokeCapability(target, capability)) {
                                             success = true;
+                                            effectedEntityCount++;
+                                        }
 
                                     if (success) {
-                                        sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + targets.size() + " entities.");
+                                        sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + effectedEntityCount + " entities.");
 
                                     } else
                                         sender.sendMessage(ChatColor.RED + "None of the entities have this capability.");
@@ -592,7 +697,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 entityQueueDump.add(" (" + ChatColor.YELLOW + entity.getType() + ChatColor.WHITE + ") " + entity.getName() + ":");
 
                 for (Capability capability : entityCapabilities)
-                    entityQueueDump.add("  - " + ChatColor.YELLOW + capability.getCapabilityName());
+                    entityQueueDump.add("  - " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
             }
 
         entityQueueDump.add("End of Entity Queue dump.");
@@ -608,6 +713,18 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 for (String message : entityQueueDump)
                     admin.sendMessage(message);
         }
+    }
+
+    /**
+     * Joins a capability name and its extra data.
+     *
+     * @param capabilityName The name of the capability.
+     * @param extraData The extra data of the capability.
+     *
+     * @return The joined form.
+     */
+    public static String joinNameAndExtra(String capabilityName, String extraData) {
+        return extraData.equals("") ? capabilityName : capabilityName + "-" + extraData;
     }
 
     @Override

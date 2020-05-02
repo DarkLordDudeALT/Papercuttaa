@@ -10,7 +10,11 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.Gene;
@@ -21,20 +25,18 @@ import java.util.Set;
 // TODO Increase knockback dealt by the strength gene.
 
 public class StrengthGene extends Gene implements Listener {
-    private final byte variantCode;
-
-    public StrengthGene(byte variantCode) {
-        this.variantCode = variantCode;
+    public StrengthGene(String extraData) {
+        super(extraData);
     }
 
     @Override
-    public byte getVariantCode() {
-        return variantCode;
+    public Capability useConstructor(String extraData) {
+        return new StrengthGene(extraData);
     }
 
     @Override
     public String getCapabilityName() {
-        return "G_strength-" + variantCode;
+        return "G_strength";
     }
 
 
@@ -47,10 +49,12 @@ public class StrengthGene extends Gene implements Listener {
 
             for (Capability possibleGene : livingEntityCapabilities)
                 if (possibleGene instanceof StrengthGene) {
-                    byte variantCode = ((Gene) possibleGene).getVariantCode();
+                    byte variant = ((Gene) possibleGene).getVariant();
 
-                    if (variantCode == 0b10)
-                        livingEntity.setVelocity(livingEntity.getVelocity());
+                    if (variant != 0)
+                        new BukkitRunnable() { @Override public void run() {
+                            livingEntity.setVelocity(livingEntity.getVelocity().multiply(new Vector(1 + variant * 0.03, 1 + variant * 0.05, 1 + variant * 0.03)));
+                        }}.runTaskLater(MainBoi.getInstance(), 1);
 
                     break;
                 }
@@ -65,10 +69,12 @@ public class StrengthGene extends Gene implements Listener {
 
             for (Capability possibleGene : playerCapabilities)
                 if (possibleGene instanceof StrengthGene) {
-                    byte variantCode = ((Gene) possibleGene).getVariantCode();
+                    byte variant = ((Gene) possibleGene).getVariant();
 
-                    if (variantCode == 0b10)
-                        player.setVelocity(player.getVelocity());
+                    if (variant != 0)
+                        new BukkitRunnable() { @Override public void run() {
+                            player.setVelocity(player.getVelocity().multiply(new Vector(1 + variant * 0.03, 1 + variant * 0.05, 1 + variant * 0.03)));
+                        }}.runTaskLater(MainBoi.getInstance(), 1);
 
                     break;
                 }
@@ -83,15 +89,36 @@ public class StrengthGene extends Gene implements Listener {
 
             for (Capability possibleGene : entityCapabilities)
                 if (possibleGene instanceof StrengthGene) {
-                    byte variantCode = ((Gene) possibleGene).getVariantCode();
+                    byte variant = ((Gene) possibleGene).getVariant();
 
-                    if (variantCode == 0b01) {
+                    if (variant != 0) {
                         Entity projectile = entityShootBowEvent.getProjectile();
-                        projectile.setVelocity(projectile.getVelocity().multiply(1.03));
 
-                    } else if (variantCode == 0b10) {
-                        Entity projectile = entityShootBowEvent.getProjectile();
-                        projectile.setVelocity(projectile.getVelocity().multiply(1.07));
+                        projectile.setVelocity(projectile.getVelocity().multiply(1.01 + variant * 0.015));
+                    }
+
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onEntityFall(EntityDamageEvent entityDamageEvent) {
+        if (!entityDamageEvent.isCancelled() && entityDamageEvent.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(entityDamageEvent.getEntity());
+
+            for (Capability possibleGene : entityCapabilities)
+                if (possibleGene instanceof StrengthGene) {
+                    byte variant = ((Gene) possibleGene).getVariant();
+
+                    if (variant != 0) {
+                        double newDamage = entityDamageEvent.getDamage() - variant * 0.4;
+
+                        if (newDamage < 0) {
+                            entityDamageEvent.setCancelled(true);
+
+                        } else
+                            entityDamageEvent.setDamage(newDamage);
                     }
 
                     break;
@@ -103,26 +130,14 @@ public class StrengthGene extends Gene implements Listener {
 
     @Override
     public void onAssignment(Entity entity) {
-        if (entity instanceof LivingEntity) {
-            LivingEntity livingEntity;
-
-            if (variantCode == 0b01) {
-                livingEntity = (LivingEntity) entity;
-                increaseAttributeValues(livingEntity, 0.03);
-
-            } else if (variantCode == 0b10) {
-                livingEntity = (LivingEntity) entity;
-                increaseAttributeValues(livingEntity, 0.07);
-            }
-        }
+        if (entity instanceof LivingEntity && variant != 0)
+            increaseAttributeValues((LivingEntity) entity, variant * 0.03);
     }
 
     @Override
     public void onRevoke(Entity entity) {
-        if (entity instanceof LivingEntity && (variantCode == 0b01 || variantCode == 0b10)) {
-            LivingEntity livingEntity = (LivingEntity) entity;
-            revertAttributeValues(livingEntity);
-        }
+        if (entity instanceof LivingEntity && variant != 0)
+            revertAttributeValues((LivingEntity) entity);
     }
 
     /**
@@ -141,21 +156,21 @@ public class StrengthGene extends Gene implements Listener {
         AttributeInstance armorToughness = livingEntity.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS);
         AttributeInstance flyingSpeed = livingEntity.getAttribute(Attribute.GENERIC_FLYING_SPEED);
 
-        AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(armor, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(armor, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(armor, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(knockbackResist, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(knockbackResist, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(knockbackResist, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(attackSpeed, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(attackSpeed, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(attackSpeed, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(armorToughness, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(armorToughness, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(armorToughness, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
-        AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("G_ST-A", multiplier, AttributeModifier.Operation.ADD_NUMBER));
+        AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("G_ST-A", 0.001, AttributeModifier.Operation.ADD_NUMBER));
         AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("G_ST-M1", multiplier, AttributeModifier.Operation.ADD_SCALAR));
     }
 

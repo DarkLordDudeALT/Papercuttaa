@@ -8,6 +8,32 @@ import org.bukkit.entity.Entity;
  */
 public abstract class Capability {
     /**
+     * The constructor. Although it must contain the same parameters, nothing needs to be done with them.
+     *
+     * Extra data is a way to save data to each individual entities' instance of a capability.
+     * It is passed to the constructor in the form of a string, and it is up to the capability to decide how to use it.
+     *
+     * @param extraData Extra data that has been placed on a tag.
+     */
+    public Capability(String extraData) {}
+
+    /**
+     * A function to access the constructor of a capability through its instances.
+     * Function must be properly implemented for the capability to work.
+     *
+     * Example:
+     *  @Override
+     *  public SomeCapability useConstructor(String extraData) {
+     *      return new SomeCapability(extraData);
+     *  }
+     *
+     * @param extraData The extra data to be supplied to the constructor.
+     *
+     * @return The created instance of the capability.
+     */
+    public abstract Capability useConstructor(String extraData);
+
+    /**
      * The name of the capability.
      * Used to store capabilities in the form of tags on entities.
      *
@@ -18,7 +44,21 @@ public abstract class Capability {
 
 
     /**
+     * The extra data of the capability.
+     * Used to store and relay the extra data of capabilities.
+     *
+     * Override to gain extra data functionality.
+     *
+     * @return The extra data a capability has.
+     */
+    public String getExtraData() {
+        return "";
+    }
+
+    /**
      * Returns true if the capability is lost on death (only applies to players.)
+     *
+     * Override to set volatility.
      *
      * @return Whether or not the capability is volatile.
      */

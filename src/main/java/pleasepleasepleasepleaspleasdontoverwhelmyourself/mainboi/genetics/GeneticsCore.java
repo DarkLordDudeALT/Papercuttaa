@@ -6,21 +6,19 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.genes.StrengthGene;
 
-// TODO Remake system to store which variant else where, and to only use one capability for each gene, rather than three.
-
 public final class GeneticsCore implements Listener {
     public static void onEnable() {
+        MainBoi mainBoi = MainBoi.getInstance();
+
         PluginManager pluginManager = MainBoi.getInstance().getServer().getPluginManager();
+        pluginManager.registerEvents(new GeneticsCore(), mainBoi);
 
         // Registering genes
         try {
-            StrengthGene strengthGene = new StrengthGene((byte) 0b00);
+            StrengthGene strengthGene = new StrengthGene("0");
 
             CapabilitiesCore.registerCapability(strengthGene);
-            CapabilitiesCore.registerCapability(new StrengthGene((byte) 0b01));
-            CapabilitiesCore.registerCapability(new StrengthGene((byte) 0b10));
-
-            pluginManager.registerEvents(strengthGene, MainBoi.getInstance());
+            pluginManager.registerEvents(strengthGene, mainBoi);
 
         } catch (CapabilitiesCore.DuplicateRegistryNameException ignore) {}
     }

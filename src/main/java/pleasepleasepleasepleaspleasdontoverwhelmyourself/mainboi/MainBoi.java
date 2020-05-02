@@ -1,39 +1,30 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi;
 
-import org.bukkit.command.PluginCommand;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.ChanceOfPercipitationCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.GeneticsCore;
 
-import java.util.Objects;
-
 // TODO Add the ability for players to set their spawn at campfires.
 
 // TODO Add programmable golems.
 
-// TODO Add Very Hard difficulty, which does normal difficulty things on top of
+// TODO Add Very Hard difficulty, which does normal difficulty things on top of some other cool stuff.
+//  Creepers leave behind fire.
+//  Fire elites use VH_airReplaceables instead of airReplaceables.
+//  Fire elites trails last longer.
+//  Spiders shoot webs.
 
-public final class MainBoi extends JavaPlugin {
+public final class MainBoi extends JavaPlugin{
     private static MainBoi instance;
 
     @Override
     public void onEnable() {
         instance = this;
 
-        CapabilitiesCore capabilitiesCore = new CapabilitiesCore();
-
         // Registering event listeners.
-        PluginManager pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(capabilitiesCore, this);
-        pluginManager.registerEvents(new GeneticsCore(), this);
-
-        // Registering command executors and tab completers.
-        PluginCommand capabilitiesCommand = Objects.requireNonNull(getCommand("capabilities"));
-        capabilitiesCommand.setExecutor(capabilitiesCore);
-        capabilitiesCommand.setTabCompleter(capabilitiesCore);
+        //PluginManager pluginManager = getServer().getPluginManager();
 
         CapabilitiesCore.onEnable();
         GeneticsCore.onEnable();

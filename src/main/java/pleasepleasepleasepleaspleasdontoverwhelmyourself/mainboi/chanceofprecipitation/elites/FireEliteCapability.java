@@ -21,15 +21,22 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.BlockLists;
 
 import java.util.Set;
 
 // TODO Make the fire trail place fires in a hashmap, so that it isn't creating 25 different runnables every time.
 
-// TODO Make a list of replaceable blocks.
-// TODO Make the fire trail replace only blocks in that list, rather than air.
-
 public class FireEliteCapability extends Capability implements Listener {
+    public FireEliteCapability(String extraData) {
+        super(extraData);
+    }
+
+    @Override
+    public Capability useConstructor(String extraData) {
+        return new FireEliteCapability(extraData);
+    }
+
     @Override
     public String getCapabilityName() {
         return "COP_fireElite";
@@ -55,11 +62,12 @@ public class FireEliteCapability extends Capability implements Listener {
         if (entity.isOnGround()) {
             Location entityLocation = entity.getLocation();
             Block feetBlock = entity.getWorld().getBlockAt(entityLocation);
+            Material feetBlockType = feetBlock.getType();
 
-            if (feetBlock.getType().equals(Material.AIR) || feetBlock.getType().equals(Material.CAVE_AIR)) {
+            if (!feetBlockType.equals(Material.FIRE) && BlockLists.airReplaceables.contains(feetBlockType)) {
                 feetBlock.setType(Material.FIRE);
 
-                // Limits the trial length.
+                // Limits the trail length.
                 new BukkitRunnable() { @Override public void run() {
                     if (feetBlock.getType().equals(Material.FIRE)) {
                         Location newEntityLocation = entity.getLocation();
