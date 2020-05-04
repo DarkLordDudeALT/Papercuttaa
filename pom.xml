@@ -72,5 +72,15 @@
             <version>1.15.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>paper</groupId>
+            <artifactId>patched</artifactId>
+            <version>1.15.2</version>
+            <scope>system</scope>
+            <systemPath>
+                C:/Users/darkl/.m2/repository/paper/patched/1.15.2/patched-1.15.2.jar
+            </systemPath>
+        </dependency>
     </dependencies>
 </project>

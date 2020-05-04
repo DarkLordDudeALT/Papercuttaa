@@ -25,8 +25,14 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.BlockLi
 
 import java.util.Set;
 
-// TODO Make the fire trail place fires in a hashmap, so that it isn't creating 25 different runnables every time.
-
+/**
+ * The fire elite from Risk of Rain.
+ *
+ * Fire elites leave behind a trail of fire.
+ * Fire elites inflict fire with melee and ranged attacks.
+ * Fire elites are immune to fire.
+ * Fire elites are always aflame.
+ */
 public class FireEliteCapability extends Capability implements Listener {
     public FireEliteCapability(String extraData) {
         super(extraData);
@@ -175,7 +181,8 @@ public class FireEliteCapability extends Capability implements Listener {
                 if (capability instanceof FireEliteCapability) {
                     Entity projectile = entityShootBowEvent.getProjectile();
 
-                    projectile.setFireTicks(2000);
+                    if (projectile.getFireTicks() <= 0)
+                        projectile.setFireTicks(2000);
 
                     break;
                 }
