@@ -7,6 +7,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -183,6 +184,11 @@ public class FireEliteCapability extends Capability implements Listener {
 
                     if (projectile.getFireTicks() <= 0)
                         projectile.setFireTicks(2000);
+
+                    if (projectile instanceof AbstractArrow) {
+                        AbstractArrow arrow = (AbstractArrow) projectile;
+                        arrow.setDamage(arrow.getDamage() * 2);
+                    }
 
                     break;
                 }
