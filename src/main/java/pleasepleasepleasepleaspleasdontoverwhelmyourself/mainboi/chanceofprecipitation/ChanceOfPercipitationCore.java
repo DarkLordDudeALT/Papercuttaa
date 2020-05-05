@@ -16,17 +16,23 @@ public final class ChanceOfPercipitationCore {
 
         FireEliteCapability fireEliteCapability = new FireEliteCapability("");
         IceEliteCapability iceEliteCapability = new IceEliteCapability("");
+        IceEliteCapability.IceBombCapability iceBombCapability = new IceEliteCapability.IceBombCapability("0");
 
         try {
             CapabilitiesCore.registerCapability(fireEliteCapability);
             Bukkit.getPluginManager().registerEvents(fireEliteCapability, mainBoi);
 
-        } catch (CapabilitiesCore.DuplicateRegistryNameException ignored) {}
+        } catch (CapabilitiesCore.DuplicateRegistryNameException exception) {
+            exception.printStackTrace();
+        }
 
         try {
             CapabilitiesCore.registerCapability(iceEliteCapability);
             Bukkit.getPluginManager().registerEvents(iceEliteCapability, mainBoi);
+            CapabilitiesCore.registerCapability(iceBombCapability);
 
-        } catch (CapabilitiesCore.DuplicateRegistryNameException ignored) {}
+        } catch (CapabilitiesCore.DuplicateRegistryNameException exception) {
+            exception.printStackTrace();
+        }
     }
 }

@@ -1,15 +1,17 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.elites;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -19,8 +21,15 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.Attribu
 
 import java.util.Set;
 
-// TODO Add the ice bomb on death of an ice elite.
+// TODO Have the ice bomb do damage.
+// TODO Rework elite damage boost.
 
+/**
+ * The ice elite from Risk of Rain.
+ *
+ * Ice elites slow entities they hit.
+ * Ice elites slow entities they shoot.
+ */
 public class IceEliteCapability extends Capability implements Listener {
     public IceEliteCapability(String extraData) {
         super(extraData);
@@ -127,6 +136,99 @@ public class IceEliteCapability extends Capability implements Listener {
 
                     break;
                 }
+        }
+    }
+
+    @EventHandler
+    public static void onEntityDeath(EntityDeathEvent entityDeathEvent) {
+        if (!entityDeathEvent.isCancelled()) {
+            Entity entity = entityDeathEvent.getEntity();
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(entity);
+
+            for (Capability capability : entityCapabilities)
+                if (capability instanceof IceEliteCapability) {
+                    Location newLocation = entity.getLocation();
+                    newLocation.setY(newLocation.getY() + entity.getHeight() / 2);
+
+                    ArmorStand armorStand = (ArmorStand) entity.getWorld().spawnEntity(newLocation, EntityType.ARMOR_STAND);
+
+                    armorStand.setMarker(true);
+                    armorStand.setVisible(false);
+                    armorStand.setCanTick(false);
+
+                    CapabilitiesCore.assignCapability(armorStand, new IceBombCapability("0"));
+                }
+        }
+    }
+
+
+
+    public static class IceBombCapability extends Capability {
+        int age;
+
+        public IceBombCapability(String extraData) {
+            super(extraData);
+
+            try {
+                age = Integer.parseInt(extraData);
+
+            } catch (NumberFormatException ignored) {
+                age = 0;
+            }
+        }
+
+        @Override
+        public Capability useConstructor(String extraData) {
+            return new IceBombCapability(extraData);
+        }
+
+        @Override
+        public String getCapabilityName() {
+            return "COP_iceBomb";
+        }
+
+        @Override
+        public boolean isVolatile() {
+            return true;
+        }
+
+        @Override
+        public String getExtraData() {
+            return String.valueOf(age);
+        }
+
+
+
+        private static final double SMOL_PI = Math.PI * 0.1;
+
+        @Override
+        public void runCapability(Entity entity) {
+            World world = entity.getWorld();
+            Location entityLocation = entity.getLocation();
+
+            // Them: Why are you spawning so many particles, with more than a couple ice bombs at a time it will lag badly!!!11!
+            // Me: Hahaha particle go brrrrr
+            double angle = SMOL_PI * age;
+            double verticalRadius = (age - 20) * 0.15;
+            double horizontalRadius = 3 - Math.abs(verticalRadius);
+
+            double particleX = horizontalRadius * Math.cos(angle) - horizontalRadius * Math.sin(angle);
+            double particleZ = horizontalRadius * Math.sin(angle) + horizontalRadius * Math.cos(angle);
+
+            world.spawnParticle(Particle.CLOUD, particleX + entityLocation.getX(), verticalRadius + entityLocation.getY(), particleZ + entityLocation.getZ(), 1, 0, 0, 0, 0);
+            world.spawnParticle(Particle.CLOUD, entityLocation.getX() - particleX, verticalRadius + entityLocation.getY(), entityLocation.getZ() - particleZ, 1, 0, 0, 0, 0);
+
+            if (age >= 40) {
+                world.spawnParticle(Particle.CLOUD, entityLocation.getX(), entityLocation.getY(), entityLocation.getZ(), 40, 0, 0, 0, 0.35);
+
+                if (entity instanceof Player) {
+                    ((Player) entity).setHealth(0);
+
+                } else
+                    entity.remove();
+
+            } else
+                age++;
         }
     }
 }

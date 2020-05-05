@@ -27,8 +27,6 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.Geneti
 //  Fire elites trails last longer.
 //  Spiders shoot webs.
 
-// TODO Have sans appear as a player in the tab menu.
-
 public final class MainBoi extends JavaPlugin implements Listener {
     private static MainBoi instance;
 
@@ -76,10 +74,9 @@ public final class MainBoi extends JavaPlugin implements Listener {
 
 
     // 草。
-    private static final String fakePlayerName = "Gnome";
-
     @EventHandler
     public static void onPlayerJoin(PlayerJoinEvent playerJoinEvent) {
+        String fakePlayerName = "Gnome";
         Player sans = Bukkit.getPlayer(fakePlayerName);
         MinecraftServer server = ((CraftServer) Bukkit.getServer()).getServer();
         WorldServer overworld = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle();
