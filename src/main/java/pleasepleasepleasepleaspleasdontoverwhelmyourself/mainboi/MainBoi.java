@@ -27,6 +27,8 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.Geneti
 //  Fire elites trails last longer.
 //  Spiders shoot webs.
 
+// TODO Fire ticks: ticks with fire!
+
 public final class MainBoi extends JavaPlugin implements Listener {
     private static MainBoi instance;
 
@@ -77,14 +79,14 @@ public final class MainBoi extends JavaPlugin implements Listener {
     @EventHandler
     public static void onPlayerJoin(PlayerJoinEvent playerJoinEvent) {
         String fakePlayerName = "Gnome";
-        Player sans = Bukkit.getPlayer(fakePlayerName);
+        Player gnome = Bukkit.getPlayer(fakePlayerName);
         MinecraftServer server = ((CraftServer) Bukkit.getServer()).getServer();
         WorldServer overworld = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle();
 
         EntityPlayer fakePlayer;
 
-        if (sans != null) {
-            fakePlayer = new EntityPlayer(server, overworld, new GameProfile(sans.getUniqueId(), "sans"), new PlayerInteractManager(overworld));
+        if (gnome != null) {
+            fakePlayer = new EntityPlayer(server, overworld, new GameProfile(gnome.getUniqueId(), "Gnome"), new PlayerInteractManager(overworld));
 
         } else
             fakePlayer = new EntityPlayer(server, overworld, new GameProfile(Bukkit.getOfflinePlayer(fakePlayerName).getUniqueId(), fakePlayerName), new PlayerInteractManager(overworld));

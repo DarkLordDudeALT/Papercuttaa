@@ -16,17 +16,21 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Ca
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 // TODO Add the freeze effect, and have the ice bomb apply it.
+// TODO Have ice bomb apply knockback.
+// TODO Make ice bomb's effect area a sphere.
 
 /**
  * The ice elite from Risk of Rain.
  *
  * Ice elites slow entities they hit.
  * Ice elites slow entities they shoot.
+ * Ice elites leave behind a ice bomb, which detonates for 150% of their damage after 2 seconds.
  */
 public class IceEliteCapability extends Capability implements Listener {
     public IceEliteCapability(String extraData) {
@@ -128,7 +132,8 @@ public class IceEliteCapability extends Capability implements Listener {
     @EventHandler
     public static void onEntityShootBow(EntityShootBowEvent entityShootBowEvent) {
         if (!entityShootBowEvent.isCancelled()) {
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(entityShootBowEvent.getEntity());
+            Entity entity = entityShootBowEvent.getEntity();
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(entity);
 
             for (Capability capability : entityCapabilities)
                 if (capability instanceof IceEliteCapability) {
@@ -136,7 +141,7 @@ public class IceEliteCapability extends Capability implements Listener {
 
                     projectile.addScoreboardTag("COP_IE-P");
 
-                    if (projectile instanceof AbstractArrow) {
+                    if (!(entity instanceof Player) && projectile instanceof AbstractArrow) {
                         AbstractArrow arrow = (AbstractArrow) projectile;
                         arrow.setDamage(arrow.getDamage() * 2);
                     }
@@ -178,6 +183,7 @@ public class IceEliteCapability extends Capability implements Listener {
                         damage = 2;
 
 
+                    IceBombCapability.addDamageSource(livingEntity);
                     CapabilitiesCore.assignCapability(armorStand, new IceBombCapability("0," + damage + "," + livingEntity.getUniqueId().toString()));
                 }
         }
@@ -185,7 +191,24 @@ public class IceEliteCapability extends Capability implements Listener {
 
 
 
+    /**
+     * The ice bomb that is left behind when ice elites die.
+     */
     public static class IceBombCapability extends Capability {
+        private static final HashMap<UUID, LivingEntity> damageSources = new HashMap<>();
+
+        /**
+         * Adds a damage source (entity) to a list that the ice bomb can use to tell the game who it belongs too.
+         *
+         * @param livingEntity The entity to add as a damage source.
+         */
+        static void addDamageSource(LivingEntity livingEntity) {
+            if (livingEntity != null)
+                damageSources.put(livingEntity.getUniqueId(), livingEntity);
+        }
+
+
+
         int age;
         double damage;
         UUID source;
@@ -198,14 +221,14 @@ public class IceEliteCapability extends Capability implements Listener {
             try {
                 age = Integer.parseInt(splitExtraData[0]);
 
-            } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ignored) {
+            } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
                 age = 0;
             }
 
             try {
                 damage = Double.parseDouble(splitExtraData[1]);
 
-            } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ignored) {
+            } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
                 damage = 2;
             }
 
@@ -264,16 +287,26 @@ public class IceEliteCapability extends Capability implements Listener {
                 if (damage != 0) {
                     List<Entity> victims = entity.getNearbyEntities(3, 3, 3);
                     Entity sourceEntity = null;
-                    boolean entityFound = false;
+                    boolean sourceFound = false;
 
+                    // Gets source of ice bomb.
                     if (source != null) {
-                        sourceEntity = Bukkit.getEntity(source);
+                        sourceEntity = damageSources.get(source);
 
-                        if (sourceEntity != null)
-                            entityFound = true;
+                        if (sourceEntity != null) {
+                            damageSources.remove(source);
+                            sourceFound = true;
+
+                        } else {
+                            sourceEntity = Bukkit.getEntity(source);
+
+                            if (sourceEntity != null)
+                                sourceFound = true;
+                        }
                     }
 
-                    if (entityFound) {
+                    // Adds damage, calls events.
+                    if (sourceFound) {
                         for (Entity victim : victims)
                             if (victim instanceof LivingEntity)
                                 ((LivingEntity) victim).damage(damage, sourceEntity);

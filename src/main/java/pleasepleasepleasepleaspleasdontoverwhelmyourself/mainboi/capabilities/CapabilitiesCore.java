@@ -54,15 +54,15 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
         new BukkitRunnable() { @Override public void run() {
             runAssimilator();
-        }}.runTaskTimer(MainBoi.getInstance(), 100, assimilatorRunInterval);
+        }}.runTaskTimer(MainBoi.getInstance(), 50, assimilatorRunInterval);
 
         new BukkitRunnable() { @Override public void run() {
             runCollector();
-        }}.runTaskTimer(MainBoi.getInstance(), 100, collectorRunInterval);
+        }}.runTaskTimer(MainBoi.getInstance(), 51, collectorRunInterval);
     }
 
     // The amount of time to wait between each run of the collector.
-    private static final long collectorRunInterval = 1200;
+    private static final long collectorRunInterval = 300;
 
     /**
      * Runs through the Entity Queue, getting rid of entities with no capabilities, and fixes discrepancies with it and entity tags.
@@ -79,6 +79,24 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
             } else {
                 Set<Capability> activeEntityCapabilities = getCapabilities(entity);
 
+                // Removes capabilities that are not contained in the tags.
+                for (Capability activeCapability : activeEntityCapabilities) {
+                    String activeCapabilityName = activeCapability.getCapabilityName();
+                    boolean hasCapability = false;
+
+                    for (Capability capability : entityCapabilities)
+                        if (activeCapabilityName.equals(capability.getCapabilityName())) {
+                            hasCapability = true;
+                            break;
+                        }
+
+                    if (!hasCapability)
+                        revokeCapability(entity, activeCapability);
+                }
+
+                activeEntityCapabilities = getCapabilities(entity);
+
+                // Loads unloaded capabilities, fixes discrepancies with extra data.
                 for (Capability capability : entityCapabilities) {
                     boolean hasCapability = false;
 
@@ -114,7 +132,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     }
 
     // The amount of time to wait between each run of the assimilator.
-    private static final long assimilatorRunInterval = 1200;
+    private static final long assimilatorRunInterval = 600;
 
     /**
      * Runs through all loaded entities, looking for those with capabilities that are not in the queue, so that it can add them.
@@ -159,13 +177,15 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     }
 
     /**
-     * Gets a capability from the registry using its name.
+     * Joins a capability name and its extra data.
      *
      * @param capabilityName The name of the capability.
-     * @return The capability.
+     * @param extraData The extra data of the capability.
+     *
+     * @return The joined form.
      */
-    public static Capability getCapabilityFromRegistry(String capabilityName) {
-        return CAPABILITIES_REGISTRY.get(capabilityName);
+    public static String joinNameAndExtra(String capabilityName, String extraData) {
+        return extraData.equals("") ? capabilityName : capabilityName + "-" + extraData;
     }
 
 
@@ -191,12 +211,15 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 }
 
             if (!hasCapability) {
+                if (!ENTITY_CAPABILITY_QUEUE.containsKey(entity))
+                    ENTITY_CAPABILITY_QUEUE.put(entity, getCapabilitiesFromTags(entity));
+
                 entity.addScoreboardTag(joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
-                ENTITY_CAPABILITY_QUEUE.put(entity, getCapabilitiesFromTags(entity));
 
                 if (entity instanceof Player && entity.isOp())
                     entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ".");
 
+                ENTITY_CAPABILITY_QUEUE.get(entity).add(capability);
                 capability.onAssignment(entity);
 
                 return true;
@@ -238,7 +261,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                         ENTITY_CAPABILITY_QUEUE.remove(entity);
 
                     } else
-                        ENTITY_CAPABILITY_QUEUE.put(entity, trueEntityCapabilities);
+                        ENTITY_CAPABILITY_QUEUE.get(entity).remove(capability);
 
                     if (entity instanceof Player && entity.isOp())
                         entity.sendMessage("The capability, " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ", has been revoked from you.");
@@ -339,6 +362,32 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     public static void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
         Player player = playerQuitEvent.getPlayer();
 
+        // Overrides extra data onto tags before unload.
+        if (ENTITY_CAPABILITY_QUEUE.containsKey(player)) {
+            Set<Capability> playerCapabilities = getCapabilitiesFromTags(player);
+            Set<Capability> activePlayerCapabilities = getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                for (Capability activeCapability : activePlayerCapabilities) {
+                    String activeCapabilityName = capability.getCapabilityName();
+
+                    if (capability.getCapabilityName().equals(activeCapabilityName)) {
+                        String activeExtraData = activeCapability.getExtraData();
+
+                        if (!capability.getExtraData().equals(activeExtraData))
+                            for (String tag : player.getScoreboardTags())
+                                if (tag.contains(activeCapabilityName)) {
+                                    player.removeScoreboardTag(tag);
+                                    player.addScoreboardTag(joinNameAndExtra(activeCapabilityName, activeExtraData));
+
+                                    break;
+                                }
+
+                        break;
+                    }
+                }
+        }
+
         ENTITY_CAPABILITY_QUEUE.remove(player);
     }
 
@@ -358,8 +407,35 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     public static void onEntityUnload(EntityRemoveFromWorldEvent entityRemoveFromWorldEvent) {
         Entity entity = entityRemoveFromWorldEvent.getEntity();
 
-        if (!(entity instanceof Player))
+        if (!(entity instanceof Player)) {
+            // Overrides extra data onto tags before unload.
+            if (ENTITY_CAPABILITY_QUEUE.containsKey(entity)) {
+                Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
+                Set<Capability> activeEntityCapabilities = getCapabilities(entity);
+
+                for (Capability capability : entityCapabilities)
+                    for (Capability activeCapability : activeEntityCapabilities) {
+                        String activeCapabilityName = capability.getCapabilityName();
+
+                        if (capability.getCapabilityName().equals(activeCapabilityName)) {
+                            String activeExtraData = activeCapability.getExtraData();
+
+                            if (!capability.getExtraData().equals(activeExtraData))
+                                for (String tag : entity.getScoreboardTags())
+                                    if (tag.contains(activeCapabilityName)) {
+                                        entity.removeScoreboardTag(tag);
+                                        entity.addScoreboardTag(joinNameAndExtra(activeCapabilityName, activeExtraData));
+
+                                        break;
+                                    }
+
+                            break;
+                        }
+                    }
+            }
+
             ENTITY_CAPABILITY_QUEUE.remove(entity);
+        }
     }
 
     /**
@@ -369,7 +445,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     public static void onPlayerDeath(PlayerDeathEvent playerDeathEvent) {
         if (!playerDeathEvent.isCancelled()) {
             Player player = playerDeathEvent.getEntity();
-            Collection<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 
             for (Capability capability : playerCapabilities)
                 if (capability.isVolatile())
@@ -713,18 +789,6 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 for (String message : entityQueueDump)
                     admin.sendMessage(message);
         }
-    }
-
-    /**
-     * Joins a capability name and its extra data.
-     *
-     * @param capabilityName The name of the capability.
-     * @param extraData The extra data of the capability.
-     *
-     * @return The joined form.
-     */
-    public static String joinNameAndExtra(String capabilityName, String extraData) {
-        return extraData.equals("") ? capabilityName : capabilityName + "-" + extraData;
     }
 
     @Override
