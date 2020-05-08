@@ -12,6 +12,8 @@ import org.bukkit.entity.Player;
  * ambient - If true, status effects produce less, or less noticeable, particles.
  * particles - If true, particles are displayed while a status effect is active.
  * notify - If true, notifies players of the effect when they receive it, and notifies them when it is gone.
+ *
+ * The extra data is stored in the order that is shown above.
  */
 public abstract class StatusEffectCapability extends Capability {
     protected int duration;
@@ -73,11 +75,53 @@ public abstract class StatusEffectCapability extends Capability {
 
 
 
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public byte getAmplifier() {
+        return amplifier;
+    }
+
+    public void setAmplifier(byte amplifier) {
+        this.amplifier = amplifier;
+    }
+
+    public boolean isAmbient() {
+        return ambient;
+    }
+
+    public void setAmbient(boolean ambient) {
+        this.ambient = ambient;
+    }
+
+    public boolean hasParticles() {
+        return particles;
+    }
+
+    public void setParticles(boolean particles) {
+        this.particles = particles;
+    }
+
+    public boolean willNotify() {
+        return notify;
+    }
+
+    public void setNotify(boolean notify) {
+        this.notify = notify;
+    }
+
+
+
     @Override
     public void runCapability(Entity entity) {
         duration -= 1;
 
-        if (duration <= -1)
+        if (duration <= 0)
             CapabilitiesCore.revokeCapability(entity, this);
     }
 

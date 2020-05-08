@@ -176,8 +176,8 @@ public class FireEliteCapability extends Capability implements Listener {
     @EventHandler
     public static void onEntityShootBow(EntityShootBowEvent entityShootBowEvent) {
         if (!entityShootBowEvent.isCancelled()) {
-            Entity entity = entityShootBowEvent.getEntity();
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(entity);
+            LivingEntity livingEntity = entityShootBowEvent.getEntity();
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
 
             for (Capability capability : entityCapabilities)
                 if (capability instanceof FireEliteCapability) {
@@ -186,7 +186,7 @@ public class FireEliteCapability extends Capability implements Listener {
                     if (projectile.getFireTicks() <= 0)
                         projectile.setFireTicks(2000);
 
-                    if (!(entity instanceof Player) && projectile instanceof AbstractArrow) {
+                    if (!(livingEntity instanceof Player) && projectile instanceof AbstractArrow) {
                         AbstractArrow arrow = (AbstractArrow) projectile;
                         arrow.setDamage(arrow.getDamage() * 2);
                     }

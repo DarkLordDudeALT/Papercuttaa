@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 //  Have the debug logger follow suit.
 // TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
 
-// TODO Have the loading and unloading event listeners preform the same operations as the collector.
-
 /**
  * The code used to manage capabilities.
  *
@@ -216,8 +214,8 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
                 entity.addScoreboardTag(joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
 
-                if (entity instanceof Player && entity.isOp())
-                    entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ".");
+                //if (entity instanceof Player && entity.isOp())
+                //    entity.sendMessage("You have been assigned the capability: " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ".");
 
                 ENTITY_CAPABILITY_QUEUE.get(entity).add(capability);
                 capability.onAssignment(entity);
@@ -263,8 +261,8 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                     } else
                         ENTITY_CAPABILITY_QUEUE.get(entity).remove(capability);
 
-                    if (entity instanceof Player && entity.isOp())
-                        entity.sendMessage("The capability, " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ", has been revoked from you.");
+                    //if (entity instanceof Player && entity.isOp())
+                    //    entity.sendMessage("The capability, " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + ", has been revoked from you.");
 
                     return true;
                 }

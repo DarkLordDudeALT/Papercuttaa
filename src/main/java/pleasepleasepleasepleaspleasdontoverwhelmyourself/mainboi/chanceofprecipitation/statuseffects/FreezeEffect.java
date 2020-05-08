@@ -1,31 +1,62 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.statuseffects;
 
-import org.bukkit.Location;
+import com.destroystokyo.paper.event.entity.EntityJumpEvent;
+import com.destroystokyo.paper.event.player.PlayerJumpEvent;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.util.Vector;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.StatusEffectCapability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.DeathMessageLists;
 
-// TODO Have freeze effect execute mobs under health threshold.
-// TODO Prevent frozen mobs from jumping.
-// TODO Prevent frozen mobs from attacking.
-// TODO Prevent frozen players from using things.
+import java.util.Set;
 
-// TODO Have the freeze effect save the rotation on extra data.
+// TODO Prevent players from toggling an elytra while frozen.
 
-// TODO Add a sound effect upon being unfrozen.
-// TODO Add a particle effect upon being unfrozen.
-
-public class FreezeEffect extends StatusEffectCapability {
+public class FreezeEffect extends StatusEffectCapability implements Listener {
     private float initialEntityYaw;
+    private boolean initialYawGiven;
     private float initialEntityPitch;
+    private boolean initialPitchGiven;
 
     public FreezeEffect(String extraData) {
         super(extraData);
+
+        String[] splitExtraData = extraData.split(",", 7);
+
+        try {
+            initialEntityYaw = Float.parseFloat(splitExtraData[5]);
+            initialYawGiven = true;
+
+        } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignore) {
+            initialEntityYaw = 0;
+            initialYawGiven = false;
+        }
+
+        try {
+            initialEntityPitch = Float.parseFloat(splitExtraData[6]);
+            initialPitchGiven = true;
+
+        } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignore) {
+            initialEntityYaw = 0;
+            initialPitchGiven = false;
+        }
     }
 
     @Override
@@ -36,6 +67,11 @@ public class FreezeEffect extends StatusEffectCapability {
     @Override
     public String getCapabilityName() {
         return "COP:SE_freeze";
+    }
+
+    @Override
+    public String getExtraData() {
+        return super.getExtraData() + "," + initialEntityYaw + "," + initialEntityPitch;
     }
 
 
@@ -50,7 +86,37 @@ public class FreezeEffect extends StatusEffectCapability {
         if (entityLocation.getYaw() != initialEntityYaw || entityLocation.getPitch() != initialEntityPitch) {
             entityLocation.setYaw(initialEntityYaw);
             entityLocation.setPitch(initialEntityPitch);
+
+            // To preserve velocity.
+            Vector velocity = entity.getVelocity();
             entity.teleport(entityLocation);
+            entity.setVelocity(velocity);
+        }
+
+        // Executes low-health entities.
+        if (entity instanceof LivingEntity) {
+            LivingEntity livingEntity = (LivingEntity) entity;
+            boolean validEntity = true;
+            boolean wasPlayer = false;
+
+            if (livingEntity instanceof Player) {
+                wasPlayer = true;
+                GameMode playerGameMode = ((Player) livingEntity).getGameMode();
+
+                if (playerGameMode.equals(GameMode.CREATIVE) || playerGameMode.equals(GameMode.SPECTATOR))
+                    validEntity = false;
+            }
+
+            if (validEntity) {
+                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+
+                if (maxHealth != null && livingEntity.getHealth() <= 0.3 * maxHealth.getValue()) {
+                    if (wasPlayer)
+                        livingEntity.addScoreboardTag("COP:SE_FE-PD");
+
+                    livingEntity.setHealth(0);
+                }
+            }
         }
     }
 
@@ -64,13 +130,24 @@ public class FreezeEffect extends StatusEffectCapability {
             AttributeInstance movementSpeed = livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
             AttributeInstance flyingSpeed = livingEntity.getAttribute(Attribute.GENERIC_FLYING_SPEED);
 
-            AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("COP_FR-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-            AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("COP_FR-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("COP:SE_FE-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("COP:SE_FE-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+
+            // Knock em' outta the sky, boys.
+            if (livingEntity instanceof Player) {
+                Player player = (Player) livingEntity;
+
+                if (player.isFlying())
+                    player.setFlying(false);
+            }
         }
 
         Location entityLocation = entity.getLocation();
-        initialEntityYaw = entityLocation.getYaw();
-        initialEntityPitch = entityLocation.getPitch();
+
+        if (!initialYawGiven)
+            initialEntityYaw = entityLocation.getYaw();
+        if (!initialPitchGiven)
+            initialEntityPitch = entityLocation.getPitch();
     }
 
     @Override
@@ -83,8 +160,144 @@ public class FreezeEffect extends StatusEffectCapability {
             AttributeInstance movementSpeed = livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
             AttributeInstance flyingSpeed = livingEntity.getAttribute(Attribute.GENERIC_FLYING_SPEED);
 
-            AttributeHelper.removeModifiers(movementSpeed, "COP_FR-M2", true);
-            AttributeHelper.removeModifiers(flyingSpeed, "COP_FR-M2", true);
+            AttributeHelper.removeModifiers(movementSpeed, "COP:SE_FE-M2", true);
+            AttributeHelper.removeModifiers(flyingSpeed, "COP:SE_FE-M2", true);
+        }
+
+        World world = entity.getWorld();
+        Location entityLocation = entity.getLocation();
+
+        double halfHeight = entity.getHeight() * 0.5;
+        entityLocation.setY(entityLocation.getY() + halfHeight);
+
+        world.spawnParticle(Particle.BLOCK_CRACK, entityLocation, 40, 0, halfHeight * 0.125, 0, 1, Material.ICE.createBlockData());
+        world.playSound(entityLocation, Sound.BLOCK_GLASS_BREAK, SoundCategory.NEUTRAL, 1, 1);
+    }
+
+
+
+    // Custom death messages.
+    @EventHandler
+    public static void onPlayerDeath(PlayerDeathEvent playerDeathEvent) {
+        if (!playerDeathEvent.isCancelled()) {
+            Player player = playerDeathEvent.getEntity();
+
+            if (player.getScoreboardTags().contains("COP:SE_FE-PD")) {
+                playerDeathEvent.setDeathMessage(DeathMessageLists.buildRandomDeathMessage(DeathMessageLists.FREEZE_DEATH_MESSAGES, player.getDisplayName()));
+                player.removeScoreboardTag("COP:SE_FE-PD");
+            }
+        }
+    }
+
+
+
+    // The following 7 event handlers prevent actions taken by those frozen.
+    @EventHandler
+    public static void onEntityJump(EntityJumpEvent entityJumpEvent) {
+        if (!entityJumpEvent.isCancelled()) {
+            LivingEntity livingEntity = entityJumpEvent.getEntity();
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
+
+            for (Capability capability : entityCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    FreezeEffect freezeEffect = (FreezeEffect) capability;
+                    freezeEffect.setDuration(freezeEffect.getDuration() - 3);
+
+                    entityJumpEvent.setCancelled(true);
+
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onPlayerJump(PlayerJumpEvent playerJumpEvent) {
+        if (!playerJumpEvent.isCancelled()) {
+            Player player = playerJumpEvent.getPlayer();
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    FreezeEffect freezeEffect = (FreezeEffect) capability;
+                    freezeEffect.setDuration(freezeEffect.getDuration() - 3);
+
+                    playerJumpEvent.setCancelled(true);
+
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onEntityHitEntity(EntityDamageByEntityEvent entityDamageByEntityEvent) {
+        if (!entityDamageByEntityEvent.isCancelled()) {
+            Entity attacker = entityDamageByEntityEvent.getDamager();
+            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(attacker);
+
+            for (Capability capability : entityCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    entityDamageByEntityEvent.setCancelled(true);
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onPlayerInteract(PlayerInteractEvent playerInteractEvent) {
+        Event.Result blockInteract = playerInteractEvent.useInteractedBlock();
+        Event.Result itemInteract = playerInteractEvent.useItemInHand();
+
+        if (!blockInteract.equals(Event.Result.DENY) || !itemInteract.equals(Event.Result.DENY)) {
+            Player player = playerInteractEvent.getPlayer();
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    playerInteractEvent.setCancelled(true);
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onPlayerInteractEntity(PlayerInteractEntityEvent playerInteractEntityEvent) {
+        if (!playerInteractEntityEvent.isCancelled()) {
+            Player player = playerInteractEntityEvent.getPlayer();
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    playerInteractEntityEvent.setCancelled(true);
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent playerInteractAtEntityEvent) {
+        if (!playerInteractAtEntityEvent.isCancelled()) {
+            Player player = playerInteractAtEntityEvent.getPlayer();
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    playerInteractAtEntityEvent.setCancelled(true);
+                    break;
+                }
+        }
+    }
+
+    @EventHandler
+    public static void onPlayerToggleFlight(PlayerToggleFlightEvent playerToggleFlightEvent) {
+        if (!playerToggleFlightEvent.isCancelled() && playerToggleFlightEvent.isFlying()) {
+            Player player = playerToggleFlightEvent.getPlayer();
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability capability : playerCapabilities)
+                if (capability instanceof FreezeEffect) {
+                    playerToggleFlightEvent.setCancelled(true);
+                    break;
+                }
         }
     }
 }

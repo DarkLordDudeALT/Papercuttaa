@@ -1,6 +1,7 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.PluginManager;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.elites.FireEliteCapability;
@@ -14,12 +15,12 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipi
 public final class ChanceOfPercipitationCore {
     public static void onEnable() {
         MainBoi mainBoi = MainBoi.getInstance();
+        PluginManager pluginManager = Bukkit.getPluginManager();
 
         try {
             FireEliteCapability fireEliteCapability = new FireEliteCapability("");
-
             CapabilitiesCore.registerCapability(fireEliteCapability);
-            Bukkit.getPluginManager().registerEvents(fireEliteCapability, mainBoi);
+            pluginManager.registerEvents(fireEliteCapability, mainBoi);
 
         } catch (CapabilitiesCore.DuplicateRegistryNameException exception) {
             exception.printStackTrace();
@@ -28,13 +29,14 @@ public final class ChanceOfPercipitationCore {
         try {
             IceEliteCapability iceEliteCapability = new IceEliteCapability("");
             CapabilitiesCore.registerCapability(iceEliteCapability);
-            Bukkit.getPluginManager().registerEvents(iceEliteCapability, mainBoi);
+            pluginManager.registerEvents(iceEliteCapability, mainBoi);
 
-            IceEliteCapability.IceBombCapability iceBombCapability = new IceEliteCapability.IceBombCapability("0");
+            IceEliteCapability.IceBombCapability iceBombCapability = new IceEliteCapability.IceBombCapability("0,2", null);
             CapabilitiesCore.registerCapability(iceBombCapability);
 
-            FreezeEffect freezeEffect = new FreezeEffect("20,0,false,true,true");
+            FreezeEffect freezeEffect = new FreezeEffect("20,0,false,true,true,0,0");
             CapabilitiesCore.registerCapability(freezeEffect);
+            pluginManager.registerEvents(freezeEffect, mainBoi);
 
         } catch (CapabilitiesCore.DuplicateRegistryNameException exception) {
             exception.printStackTrace();
