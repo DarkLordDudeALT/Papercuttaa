@@ -12,8 +12,10 @@ import java.util.Random;
 public final class DeathMessageLists {
     private static final Random random = new Random();
 
+    // List of death messages for freeze effect execution and death to ice bombs.
     public final static ArrayList<String> FREEZE_DEATH_MESSAGES = new ArrayList<>(Arrays.asList(
-            "{VICTIM} was straight iced", "{VICTIM} got a brain freeze", "{VICTIM} was shattered into a million pieces", "{VICTIM} forgot their blanket", "{VICTIM} couldn't handle the cold"
+            "{VICTIM} was straight iced", "{VICTIM} got a brain freeze", "{VICTIM} was shattered into a million pieces", "{VICTIM} forgot their blanket", "{VICTIM} couldn't handle the cold",
+            "{VICTIM} forgot to close the freezer", "{VICTIM} got the cold shoulder", "{VICTIM} was frozen in time", "{VICTIM} was turned into a popsicle, funniest shit I've ever seen"
     ));
 
     /**

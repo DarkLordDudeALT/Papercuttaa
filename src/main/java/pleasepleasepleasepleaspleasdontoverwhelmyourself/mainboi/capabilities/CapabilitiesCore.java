@@ -30,7 +30,8 @@ import java.util.logging.Logger;
  *
  * Capabilities are persistent data structures for entities.
  *
- * A capability must extend Capability.java, the base class.
+ * A capability must extend Capability.java, the base class, or one of its child classes.
+ * A capability must properly implement useConstructor() and getCapabilityName().
  * A capability then must be registered with registerCapability().
  * Then you are free to assign and revoke that capability to your heart's content.
  */
@@ -407,7 +408,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
 
         if (!(entity instanceof Player)) {
             // Overrides extra data onto tags before unload.
-            if (ENTITY_CAPABILITY_QUEUE.containsKey(entity)) {
+            if (!entity.isDead() && ENTITY_CAPABILITY_QUEUE.containsKey(entity)) {
                 Set<Capability> entityCapabilities = getCapabilitiesFromTags(entity);
                 Set<Capability> activeEntityCapabilities = getCapabilities(entity);
 

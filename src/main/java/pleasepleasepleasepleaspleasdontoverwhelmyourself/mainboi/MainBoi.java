@@ -15,7 +15,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.ChanceOfPercipitationCore;
-import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.genetics.GeneticsCore;
 
 // TODO Add the ability for players to set their spawn at campfires.
 
@@ -41,7 +40,6 @@ public final class MainBoi extends JavaPlugin implements Listener {
         pluginManager.registerEvents(this, this);
 
         CapabilitiesCore.onEnable();
-        GeneticsCore.onEnable();
         ChanceOfPercipitationCore.onEnable();
 
         // Starts onTick function.

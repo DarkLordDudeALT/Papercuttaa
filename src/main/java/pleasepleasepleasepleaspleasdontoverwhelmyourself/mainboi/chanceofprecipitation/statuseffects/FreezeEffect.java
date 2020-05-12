@@ -27,8 +27,12 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.DeathMe
 
 import java.util.Set;
 
-// TODO Prevent players from toggling an elytra while frozen.
-
+/**
+ * The freeze effect from risk of rain 2.
+ *
+ * Freeze effect prevents movement, rotation, and actions made by entities.
+ * Entities that are under 30% of their maximum health are executed.
+ */
 public class FreezeEffect extends StatusEffectCapability implements Listener {
     private float initialEntityYaw;
     private boolean initialYawGiven;
@@ -38,23 +42,35 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
     public FreezeEffect(String extraData) {
         super(extraData);
 
-        String[] splitExtraData = extraData.split(",", 7);
+        String[] splitExtraData = extraData.split(",");
 
-        try {
-            initialEntityYaw = Float.parseFloat(splitExtraData[5]);
-            initialYawGiven = true;
+        if (splitExtraData.length >= 5) {
+            try {
+                initialEntityYaw = Float.parseFloat(splitExtraData[5]);
+                initialYawGiven = true;
 
-        } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignore) {
+            } catch (NumberFormatException ignore) {
+                initialEntityYaw = 0;
+                initialYawGiven = false;
+            }
+
+        } else {
             initialEntityYaw = 0;
             initialYawGiven = false;
         }
 
-        try {
-            initialEntityPitch = Float.parseFloat(splitExtraData[6]);
-            initialPitchGiven = true;
+        if (splitExtraData.length >= 6) {
+            try {
+                initialEntityPitch = Float.parseFloat(splitExtraData[6]);
+                initialPitchGiven = true;
 
-        } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignore) {
-            initialEntityYaw = 0;
+            } catch (NumberFormatException ignore) {
+                initialEntityPitch = 0;
+                initialPitchGiven = false;
+            }
+
+        } else {
+            initialEntityPitch = 0;
             initialPitchGiven = false;
         }
     }

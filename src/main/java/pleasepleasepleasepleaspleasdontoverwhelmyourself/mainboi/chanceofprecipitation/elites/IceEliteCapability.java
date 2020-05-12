@@ -16,19 +16,16 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Ca
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.statuseffects.FreezeEffect;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.CommandHelper;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-// TODO Make ice bomb's effect area a sphere.
+import java.util.*;
 
 /**
- * The ice elite from Risk of Rain.
+ * The ice elite from Risk of Rain 2.
  *
  * Ice elites slow entities they hit.
  * Ice elites slow entities they shoot.
- * Ice elites leave behind a ice bomb, which detonates for 150% of their damage after 2 seconds.
+ * Ice elites leave behind a ice bomb, which detonates for 150% of their damage after 2 seconds. Also applies freezing;
  */
 public class IceEliteCapability extends Capability implements Listener {
     public IceEliteCapability(String extraData) {
@@ -58,10 +55,9 @@ public class IceEliteCapability extends Capability implements Listener {
             if (entity instanceof LivingEntity) {
                 LivingEntity livingEntity = (LivingEntity) entity;
 
-                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                 AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-                AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("COP_IE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addHealthModifierAndScale(livingEntity, new AttributeModifier("COP_IE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
                 AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_IE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
             }
 
@@ -79,10 +75,9 @@ public class IceEliteCapability extends Capability implements Listener {
             if (entity instanceof LivingEntity) {
                 LivingEntity livingEntity = (LivingEntity) entity;
 
-                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                 AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-                AttributeHelper.removeModifiers(maxHealth, "COP_IE-M2", true);
+                AttributeHelper.removeHealthModifiersAndScale(livingEntity, "COP_IE-M2", true);
                 AttributeHelper.removeModifiers(attackDamage, "COP_IE-M2", true);
             }
 
@@ -207,29 +202,40 @@ public class IceEliteCapability extends Capability implements Listener {
         public IceBombCapability(String extraData, Entity sourceEntity) {
             super(extraData);
 
-            String[] splitExtraData = extraData.split(",", 3);
+            String[] splitExtraData = extraData.split(",");
 
-            try {
-                age = Integer.parseInt(splitExtraData[0]);
+            if (splitExtraData.length >= 1) {
+                try {
+                    age = Integer.parseInt(splitExtraData[0]);
 
-            } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
+                } catch (NumberFormatException ignored) {
+                    age = 0;
+                }
+
+            } else
                 age = 0;
-            }
 
-            try {
-                damage = Double.parseDouble(splitExtraData[1]);
+            if (splitExtraData.length >= 2) {
+                try {
+                    damage = Double.parseDouble(splitExtraData[1]);
 
-            } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
+                } catch (NumberFormatException ignored) {
+                    damage = 2;
+                }
+
+            } else
                 damage = 2;
-            }
 
-            try {
-                sourceUUID = UUID.fromString(splitExtraData[2]);
+            if (splitExtraData.length >= 3) {
+                try {
+                    sourceUUID = UUID.fromString(splitExtraData[2]);
 
-            } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ignored) {
+                } catch (IllegalArgumentException ignored) {
+                    sourceUUID = null;
+                }
+
+            } else
                 sourceUUID = null;
-            }
-
 
             this.sourceEntity = sourceEntity;
 
@@ -282,7 +288,7 @@ public class IceEliteCapability extends Capability implements Listener {
 
                 // Damage stuff.
                 if (damage != 0) {
-                    List<Entity> victims = entity.getNearbyEntities(3, 3, 3);
+                    List<Entity> victims = CommandHelper.getEntitiesWithinRadius(entityLocation, 3, new ArrayList<>(Collections.singleton(entity)));
                     Entity sourceEntity = null;
                     boolean sourceFound = false;
 

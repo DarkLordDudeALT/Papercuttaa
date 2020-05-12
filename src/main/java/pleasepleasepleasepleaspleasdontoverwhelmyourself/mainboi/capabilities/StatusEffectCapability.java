@@ -25,42 +25,47 @@ public abstract class StatusEffectCapability extends Capability {
     public StatusEffectCapability(String extraData) {
         super(extraData);
 
-        String[] splitExtraData = extraData.split(",", 5);
+        String[] splitExtraData = extraData.split(",");
 
-        try {
-            duration = Integer.parseInt(splitExtraData[0]);
+        if (splitExtraData.length >= 1) {
+            try {
+                duration = Integer.parseInt(splitExtraData[0]);
 
-        } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
+            } catch (NumberFormatException ignored) {
+                duration = 20;
+            }
+
+        } else
             duration = 20;
-        }
 
-        try {
-            amplifier = Byte.parseByte(splitExtraData[1]);
+        if (splitExtraData.length >= 2) {
+            try {
+                amplifier = Byte.parseByte(splitExtraData[1]);
 
-        } catch (ArrayIndexOutOfBoundsException | NumberFormatException ignored) {
+            } catch (NumberFormatException ignored) {
+                amplifier = 0;
+            }
+
+        } else
             amplifier = 0;
-        }
 
-        try {
+        if (splitExtraData.length >= 3) {
             ambient = Boolean.parseBoolean(splitExtraData[2]);
 
-        } catch (ArrayIndexOutOfBoundsException ignored) {
+        } else
             ambient = false;
-        }
 
-        try {
+        if (splitExtraData.length >= 4) {
             particles = Boolean.parseBoolean(splitExtraData[3]);
 
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-            particles = false;
-        }
+        } else
+            particles = true;
 
-        try {
+        if (splitExtraData.length >= 5) {
             notify = Boolean.parseBoolean(splitExtraData[4]);
 
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-            notify = false;
-        }
+        } else
+            notify = true;
     }
 
     @Override

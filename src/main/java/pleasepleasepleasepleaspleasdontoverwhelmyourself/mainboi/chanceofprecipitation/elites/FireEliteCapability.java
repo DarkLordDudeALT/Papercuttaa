@@ -27,7 +27,7 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.BlockLi
 import java.util.Set;
 
 /**
- * The fire elite from Risk of Rain.
+ * The fire elite from Risk of Rain 2.
  *
  * Fire elites leave behind a trail of fire.
  * Fire elites inflict fire with melee and ranged attacks.
@@ -102,10 +102,9 @@ public class FireEliteCapability extends Capability implements Listener {
             if (entity instanceof LivingEntity) {
                 LivingEntity livingEntity = (LivingEntity) entity;
 
-                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                 AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-                AttributeHelper.addModifierSafely(maxHealth, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addHealthModifierAndScale(livingEntity, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
                 AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
             }
 
@@ -123,10 +122,9 @@ public class FireEliteCapability extends Capability implements Listener {
             if (entity instanceof LivingEntity) {
                 LivingEntity livingEntity = (LivingEntity) entity;
 
-                AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                 AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-                AttributeHelper.removeModifiers(maxHealth, "COP_FE-M2", true);
+                AttributeHelper.removeHealthModifiersAndScale(livingEntity, "COP_FE-M2", true);
                 AttributeHelper.removeModifiers(attackDamage, "COP_FE-M2", true);
             }
 
