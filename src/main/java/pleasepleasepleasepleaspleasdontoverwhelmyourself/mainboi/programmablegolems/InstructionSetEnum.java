@@ -1,5 +1,7 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems;
 
+import java.util.HashMap;
+
 public enum InstructionSetEnum {
     REFERENCE_ARRAY_LOAD((byte) 0x32, "aaload", (byte) 0),
     REFERENCE_ARRAY_STORE((byte) 0x53, "aastore", (byte) 0),
@@ -272,12 +274,15 @@ public enum InstructionSetEnum {
 
 
 
-    // An array for quickly converting instruction codes to instructions.
+    // Lists for quickly converting instruction codes and mnemonics to instructions.
     private static final InstructionSetEnum[] sortedInstructionList = new InstructionSetEnum[256];
+    private static final HashMap<String, InstructionSetEnum> mnemonicToInstruction = new HashMap<>();
 
     public static void onEnable() {
-        for (InstructionSetEnum instruction : InstructionSetEnum.values())
+        for (InstructionSetEnum instruction : InstructionSetEnum.values()) {
             sortedInstructionList[((int) instruction.getInstructionCode()) & 0xFF] = instruction;
+            mnemonicToInstruction.put(instruction.getMnemonic(), instruction);
+        }
     }
 
     /**
@@ -299,10 +304,6 @@ public enum InstructionSetEnum {
      * @return The corresponding instruction.
      */
     public static InstructionSetEnum getInstructionByMnemonic(String mnemonic) {
-        for (InstructionSetEnum instruction : InstructionSetEnum.values())
-            if (instruction.getMnemonic().equalsIgnoreCase(mnemonic))
-                return instruction;
-
-        return null;
+        return mnemonicToInstruction.get(mnemonic);
     }
 }

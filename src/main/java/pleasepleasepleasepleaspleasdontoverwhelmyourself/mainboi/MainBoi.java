@@ -9,13 +9,16 @@ import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.ChanceOfPercipitationCore;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.NMSHelper;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.InstructionSetEnum;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.ProgrammableGolemHandler;
 
 // TODO Add the ability for players to set their spawn at campfires.
 
@@ -43,6 +46,7 @@ public final class MainBoi extends JavaPlugin implements Listener {
         CapabilitiesCore.onEnable();
         ChanceOfPercipitationCore.onEnable();
         InstructionSetEnum.onEnable();
+        NMSHelper.onEnable();
 
         // Starts onTick function.
         new BukkitRunnable() {@Override public void run() {
@@ -93,5 +97,13 @@ public final class MainBoi extends JavaPlugin implements Listener {
 
         PlayerConnection playerConnection = ((CraftPlayer) playerJoinEvent.getPlayer()).getHandle().playerConnection;
         playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, fakePlayer));
+    }
+
+    @EventHandler
+    public static void onChat(PlayerChatEvent asyncPlayerChatEvent) {
+        if (asyncPlayerChatEvent.getMessage().equalsIgnoreCase("spawn")) {
+            Player player = asyncPlayerChatEvent.getPlayer();
+            ProgrammableGolemHandler.spawnProgrammableGolem(player.getLocation());
+        }
     }
 }
