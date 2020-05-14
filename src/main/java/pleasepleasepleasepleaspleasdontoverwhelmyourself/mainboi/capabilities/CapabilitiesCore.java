@@ -183,7 +183,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      *
      * @return The joined form.
      */
-    public static String joinNameAndExtra(String capabilityName, String extraData) {
+    private static String joinNameAndExtra(String capabilityName, String extraData) {
         return extraData.equals("") ? capabilityName : capabilityName + "-" + extraData;
     }
 

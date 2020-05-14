@@ -9,17 +9,59 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.scheduler.BukkitRunnable;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
-// TODO Add option to run all golem code in separate thread. All calls to change the game will need to synchronize.
-
+/**
+ * Code used to manage programmable golems.
+ *
+ * Launches another thread, and uses both it and the main thread to provide run loops for the golems.
+ */
 public final class ProgrammableGolemHandler implements Listener {
     // Storage of programmable golems in plugin memory for handling.
-    private static final HashMap<ArmorStand, ProgrammableGolemInstance> GOLEM_QUEUE = new HashMap<>();
+    private static final ConcurrentHashMap<ArmorStand, ProgrammableGolemInstance> GOLEM_QUEUE = new ConcurrentHashMap<>();
+    private static volatile boolean shouldStopThread = false;
 
     public static void onEnable() {
+        // Asynchronous golem ticking.
+        Thread golemCodeManagerAsynchronous = new Thread(() -> {
+            long lastTime = System.nanoTime();
 
+            while (!shouldStopThread) {
+                for (ProgrammableGolemInstance programmableGolem : GOLEM_QUEUE.values())
+                    programmableGolem.tick();
+
+                // Makes thread run about every 1/60 of a second, unless it is behind schedule.
+                long deltaTime = System.nanoTime() - lastTime;
+                if (deltaTime < 16666670)
+                    try {
+                        Thread.sleep((16666670 - deltaTime) / 10000000);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                lastTime = System.nanoTime();
+            }
+        });
+
+        // Synchronous golem runner
+        BukkitRunnable golemCodeManagerSynchronous = new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (ProgrammableGolemInstance programmableGolem : GOLEM_QUEUE.values())
+                    programmableGolem.synchronizedTick();
+            }
+        };
+
+        golemCodeManagerAsynchronous.start();
+        golemCodeManagerSynchronous.runTaskTimer(MainBoi.getInstance(), 0, 1);
+    }
+
+    public static void onDisable() {
+        shouldStopThread = true;
     }
 
 
@@ -51,7 +93,7 @@ public final class ProgrammableGolemHandler implements Listener {
      *
      * @return Whether or not the armor stand was a golem to begin with.
      */
-    public static boolean makeProgrammable(ArmorStand armorStand) {
+    private static boolean makeProgrammable(ArmorStand armorStand) {
         if (!GOLEM_QUEUE.containsKey(armorStand)) {
             if (armorStand.getScoreboardTags().contains("programmableGolem")) {
                 GOLEM_QUEUE.put(armorStand, new ProgrammableGolemInstance(armorStand));
@@ -75,7 +117,7 @@ public final class ProgrammableGolemHandler implements Listener {
      *
      * @return Whether or not the armor stand was an active golem.
      */
-    public static boolean makeNotProgrammable(ArmorStand golem) {
+    static synchronized boolean makeNotProgrammable(ArmorStand golem) {
         if (GOLEM_QUEUE.containsKey(golem)) {
             GOLEM_QUEUE.remove(golem);
             golem.removeScoreboardTag("programmableGolem");
@@ -105,19 +147,5 @@ public final class ProgrammableGolemHandler implements Listener {
 
         if (possibleGolem instanceof ArmorStand)
             GOLEM_QUEUE.remove(possibleGolem);
-    }
-
-
-
-    /**
-     * Called when a possible golem attempts to tick its instance.
-     *
-     * @param golem The possible golem.
-     */
-    public static void tickGolem(ArmorStand golem) {
-        ProgrammableGolemInstance programmableGolem = GOLEM_QUEUE.get(golem);
-
-        if (programmableGolem != null)
-            programmableGolem.tick();
     }
 }

@@ -16,7 +16,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.ChanceOfPercipitationCore;
-import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.NMSHelper;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.InstructionSetEnum;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.ProgrammableGolemHandler;
 
@@ -46,7 +45,7 @@ public final class MainBoi extends JavaPlugin implements Listener {
         CapabilitiesCore.onEnable();
         ChanceOfPercipitationCore.onEnable();
         InstructionSetEnum.onEnable();
-        NMSHelper.onEnable();
+        ProgrammableGolemHandler.onEnable();
 
         // Starts onTick function.
         new BukkitRunnable() {@Override public void run() {
@@ -63,7 +62,7 @@ public final class MainBoi extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-
+        ProgrammableGolemHandler.onDisable();
     }
 
 
