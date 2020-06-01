@@ -12,6 +12,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 
+import java.lang.Thread;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ProgrammableGolemHandler implements Listener {
     // Storage of programmable golems in plugin memory for handling.
-    private static final ConcurrentHashMap<ArmorStand, ProgrammableGolemInstance> GOLEM_QUEUE = new ConcurrentHashMap<>();
+    static final ConcurrentHashMap<ArmorStand, ProgrammableGolemInstance> GOLEM_QUEUE = new ConcurrentHashMap<>();
     private static volatile boolean shouldStopThread = false;
 
     public static void onEnable() {
@@ -31,13 +32,14 @@ public final class ProgrammableGolemHandler implements Listener {
 
             while (!shouldStopThread) {
                 for (ProgrammableGolemInstance programmableGolem : GOLEM_QUEUE.values())
-                    programmableGolem.tick();
+                    if (programmableGolem.isOn)
+                        programmableGolem.tick();
 
                 // Makes thread run about every 1/60 of a second, unless it is behind schedule.
                 long deltaTime = System.nanoTime() - lastTime;
-                if (deltaTime < 16666670)
+                if (deltaTime < 16_666_670)
                     try {
-                        Thread.sleep((16666670 - deltaTime) / 10000000);
+                        Thread.sleep((16_666_670 - deltaTime) / 1_000_000);
 
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -76,11 +78,13 @@ public final class ProgrammableGolemHandler implements Listener {
     public static ProgrammableGolemInstance spawnProgrammableGolem(Location location) {
         ArmorStand golem = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
 
-        golem.setCustomName("BotBoi #" + golem.getUniqueId());
+        golem.setCustomName("BotBoi #" + golem.getUniqueId().toString());
+        golem.setCustomNameVisible(true);
         golem.setSmall(true);
         golem.setArms(true);
         golem.setBasePlate(false);
         golem.setDisabledSlots(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.HAND, EquipmentSlot.OFF_HAND);
+
         makeProgrammable(golem);
 
         return GOLEM_QUEUE.get(golem);
@@ -91,10 +95,9 @@ public final class ProgrammableGolemHandler implements Listener {
      *
      * @param armorStand The armor stand to turn into an active golem.
      *
-     * @return Whether or not the armor stand was a golem to begin with.
      */
-    private static boolean makeProgrammable(ArmorStand armorStand) {
-        if (!GOLEM_QUEUE.containsKey(armorStand)) {
+    private static void makeProgrammable(ArmorStand armorStand) {
+        if (!GOLEM_QUEUE.containsKey(armorStand))
             if (armorStand.getScoreboardTags().contains("programmableGolem")) {
                 GOLEM_QUEUE.put(armorStand, new ProgrammableGolemInstance(armorStand));
 
@@ -102,11 +105,6 @@ public final class ProgrammableGolemHandler implements Listener {
                 GOLEM_QUEUE.put(armorStand, new ProgrammableGolemInstance(armorStand));
                 armorStand.addScoreboardTag("programmableGolem");
             }
-
-            return true;
-        }
-
-        return false;
     }
 
 
@@ -115,17 +113,12 @@ public final class ProgrammableGolemHandler implements Listener {
      *
      * @param golem The golem to revert.
      *
-     * @return Whether or not the armor stand was an active golem.
      */
-    static synchronized boolean makeNotProgrammable(ArmorStand golem) {
+    static void makeNotProgrammable(ArmorStand golem) {
         if (GOLEM_QUEUE.containsKey(golem)) {
             GOLEM_QUEUE.remove(golem);
             golem.removeScoreboardTag("programmableGolem");
-
-            return true;
         }
-
-        return false;
     }
 
 

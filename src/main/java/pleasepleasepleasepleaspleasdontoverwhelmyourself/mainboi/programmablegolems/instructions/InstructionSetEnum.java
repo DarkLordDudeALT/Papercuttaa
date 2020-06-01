@@ -1,16 +1,16 @@
-package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems;
+package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.instructions;
 
 import java.util.HashMap;
 
 public enum InstructionSetEnum {
     REFERENCE_ARRAY_LOAD((byte) 0x32, "aaload", (byte) 0),
     REFERENCE_ARRAY_STORE((byte) 0x53, "aastore", (byte) 0),
-    REFERENCE_CONST_NULL((byte) 0x01, "aconst_null", (byte) 0),
-    REFERENCE_LOAD((byte) 0x19, "aload", (byte) 1),
-    REFERENCE_LOAD_0((byte) 0x2A, "aload_0", (byte) 0),
-    REFERENCE_LOAD_1((byte) 0x2B, "aload_1", (byte) 0),
-    REFERENCE_LOAD_2((byte) 0x2C, "aload_2", (byte) 0),
-    REFERENCE_LOAD_3((byte) 0x2D, "aload_3", (byte) 0),
+    REFERENCE_CONST_NULL((byte) 0x01, "aconst_null", (byte) 0), // Check.
+    REFERENCE_LOAD((byte) 0x19, "aload", (byte) 1), // Check.
+    REFERENCE_LOAD_0((byte) 0x2A, "aload_0", (byte) 0), // Check.
+    REFERENCE_LOAD_1((byte) 0x2B, "aload_1", (byte) 0), // Check.
+    REFERENCE_LOAD_2((byte) 0x2C, "aload_2", (byte) 0), // Check.
+    REFERENCE_LOAD_3((byte) 0x2D, "aload_3", (byte) 0), // Check.
     REFERENCE_NEW_ARRAY((byte) 0xBD, "anewarray", (byte) 2),
     REFERENCE_RETURN((byte) 0xB0, "areturn", (byte) 0),
 
@@ -150,7 +150,7 @@ public enum InstructionSetEnum {
     INTEGER_LOAD_2((byte) 0x1C, "iload_2", (byte) 0),
     INTEGER_LOAD_3((byte) 0x1D, "iload_3", (byte) 0),
 
-    IMPLEMENTATION_DEPENDENT_1((byte) 0xFE, "impdep1", (byte) 0),
+    IMPLEMENTATION_DEPENDENT_1((byte) 0xFE, "impdep1", (byte) 1),
     IMPLEMENTATION_DEPENDENT_2((byte) 0xFF, "impdep2", (byte) 0),
 
     INTEGER_MULTIPLY((byte) 0x68, "imul", (byte) 0),
