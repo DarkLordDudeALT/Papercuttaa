@@ -9,6 +9,9 @@ commands:
     description: A command for micro-managing the capabilities system.
     usage: "Usage: /<command> (assign|revoke|list|debug)"
     permission: admin
+  setlocale:
+    description: Sets your locale to the given language, if it is loaded.
+    usage: "Usage: /<command> (language name)"
 permissions:
   admin:
     description: Full control.

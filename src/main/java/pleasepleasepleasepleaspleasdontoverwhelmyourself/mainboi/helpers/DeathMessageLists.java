@@ -12,32 +12,41 @@ import java.util.Random;
 public final class DeathMessageLists {
     private static final Random random = new Random();
 
+
     // List of death messages for freeze effect execution and death to ice bombs.
     public final static ArrayList<String> FREEZE_DEATH_MESSAGES = new ArrayList<>(Arrays.asList(
-            "{VICTIM} was straight iced", "{VICTIM} got a brain freeze", "{VICTIM} was shattered into a million pieces", "{VICTIM} forgot their blanket", "{VICTIM} couldn't handle the cold",
-            "{VICTIM} forgot to close the freezer", "{VICTIM} got the cold shoulder", "{VICTIM} was frozen in time", "{VICTIM} was turned into a popsicle, funniest shit I've ever seen"
+            "%s was straight iced", "%s got a brain freeze", "%s was shattered into a million pieces", "%s forgot their blanket", "%s couldn't handle the cold",
+            "%s forgot to close the freezer", "%s got the cold shoulder", "%s was frozen in time", "%s was turned into a popsicle, funniest shit I've ever seen"
     ));
+
 
     /**
      * Constructs a death message from a list of strings.
-     * Replaces all occurrences of "{VICTIM}" with victimName.
+     * Replaces all occurrences of "%s" with victimName.
      *
      * @param messageList The list of messages to pull from.
      * @param victimName The name of the victim.
      *
-     * @return The constructed deathMessage
+     * @return The constructed deathMessage.
      */
     public static String buildRandomDeathMessage(ArrayList<String> messageList, String victimName) {
-        String[] splitMessage = messageList.get((int) (messageList.size() * random.nextDouble())).split("\\{VICTIM}");
-        StringBuilder constructedMessage = new StringBuilder();
+        String message = messageList.get((int) (messageList.size() * random.nextDouble()));
+        return message.replaceAll("%s", victimName);
+    }
 
-        for (int i = 0; i < splitMessage.length; i++) {
-            constructedMessage.append(splitMessage[i]);
-
-            if (i != splitMessage.length - 1)
-                constructedMessage.append(victimName);
-        }
-
-        return constructedMessage.toString();
+    /**
+     * Constructs a death message from a list of strings.
+     * Replaces all occurrences of "%s1" with victimName.
+     * Replaces all occurrences of "%s2" with attackerName.
+     *
+     * @param messageList The list of messages to pull from.
+     * @param victimName The name of the victim.
+     * @param attackerName The name of the attacker.
+     *
+     * @return The constructed deathMessage.
+     */
+    public static String buildRandomDeathMessage(ArrayList<String> messageList, String victimName, String attackerName) {
+        String message = messageList.get((int) (messageList.size() * random.nextDouble()));
+        return message.replaceAll("%s1", victimName).replaceAll("%s2", attackerName);
     }
 }

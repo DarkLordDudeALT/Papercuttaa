@@ -16,9 +16,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.chanceofprecipitation.ChanceOfPercipitationCore;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.LocalizedMessages;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.ProgrammableGolemHandler;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.ProgrammableGolemInstance;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegolems.instructions.InstructionSetEnum;
+
+import java.io.File;
 
 // TODO Add the ability for players to set their spawn at campfires.
 
@@ -32,6 +35,8 @@ import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.programmablegol
 
 // TODO Fire ticks: ticks with fire!
 
+// TODO Have players swap armor with armor stands when they shift-right-click it.
+
 public final class MainBoi extends JavaPlugin implements Listener {
     private static MainBoi instance;
 
@@ -39,9 +44,16 @@ public final class MainBoi extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
 
-        // Registering event listeners.
-        PluginManager pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(this, this);
+        // Initializes configuration and long-term data storage.
+        File dataFolder = this.getDataFolder();
+
+        if (!dataFolder.exists())
+            dataFolder.mkdir();
+
+        saveDefaultConfig();
+
+        // Enables other classes.
+        LocalizedMessages.onEnable(dataFolder, getConfig());
 
         CapabilitiesCore.onEnable();
         ChanceOfPercipitationCore.onEnable();
@@ -49,6 +61,10 @@ public final class MainBoi extends JavaPlugin implements Listener {
         InstructionSetEnum.onEnable();
         ProgrammableGolemHandler.onEnable();
         ProgrammableGolemInstance.onEnable();
+
+        // Registering event listeners.
+        PluginManager pluginManager = getServer().getPluginManager();
+        pluginManager.registerEvents(this, this);
 
         // Starts onTick function.
         new BukkitRunnable() {@Override public void run() {
