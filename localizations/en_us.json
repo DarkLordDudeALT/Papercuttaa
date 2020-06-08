@@ -4,8 +4,9 @@
   "language.name": "English (US)",
   
   "command.setlocale.success": "Successfully set your locale to English (US)",
-  "command.setlocale.not_found": "%s is not a known language",
   "command.setlocale.already_set": "Your locale is already set to English (US)",
+  "command.setlocale.not_found": "%s is not a known language",
+  "command.setlocale.only_players": "Only players can use /setlocale",
   
   "command.capabilities.list.no_capabilities": "There are no registered capabilities",
   "command.capabilities.list.list_capabilities": "The registered capability(ies) is/are: ",
@@ -23,6 +24,13 @@
   "command.capabilities.debug.setinterval.invalid_number": "%s must be greater than 0!",
   "command.capabilities.debug.setinterval.usage": "Usage: /capabilities debug setInterval <intervalTime>",
   "command.capabilities.debug.usage": "Usage: /capabilities debug (start|stop|dump|setInterval)",
+  "command.capabilities.assign.none_found": "Entity '%s' cannot be found",
+  "command.capabilities.assign.success": "Assigned '%s1' to %s2",
+  "command.capabilities.assign.already_set": "%s already has this capability",
+  "command.capabilities.assign.success_multi": "Assigned '%s1' to %s2 entities",
+  "command.capabilities.assign.already_set_multi": "All of the selected entities already have this capability",
+  "command.capabilities.assign.not_known": "'%s' is not a known capability",
+  "command.capabilities.assign.usage": "Usage: /capabilities assign <targets> <capability>",
   
   "capabilities.debugger.dump_start": "Entity Queue dump: ",
   "capabilities.debugger.empty": " Nothing!",
