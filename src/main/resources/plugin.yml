@@ -11,7 +11,7 @@ commands:
     permission: admin
   setlocale:
     description: Sets your locale to the given language, if it is loaded.
-    usage: "Usage: /<command> (language name)"
+    usage: "Usage: /<command> <languageName>"
 permissions:
   admin:
     description: Full control.

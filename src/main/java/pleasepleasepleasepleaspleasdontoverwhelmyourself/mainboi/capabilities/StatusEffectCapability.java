@@ -147,8 +147,7 @@ public abstract class StatusEffectCapability extends Capability {
 
             entity.sendMessage(LocalizedMessages.getMessageFor(entity, "capability.statuseffect.notify_give")
                     .replaceAll("%s1", "" + ChatColor.YELLOW + ChatColor.ITALIC + (displayName == null ? getCapabilityName() : displayName) + (amplifier != 0 ? " " + String.valueOf(amplifier) : "") + ChatColor.RESET)
-                    .replaceAll("%s2","" + ChatColor.YELLOW + ChatColor.ITALIC + Math.round(duration / 20.0) + ChatColor.RESET)
-            );
+                    .replaceAll("%s2","" + ChatColor.YELLOW + ChatColor.ITALIC + Math.round(duration / 20.0) + ChatColor.RESET));
         }
     }
 
@@ -158,8 +157,7 @@ public abstract class StatusEffectCapability extends Capability {
             String displayName = LocalizedMessages.getMessageFor(entity, getBaseName());
 
             entity.sendMessage(LocalizedMessages.getMessageFor(entity, "capability.statuseffect.notify_remove")
-                    .replaceAll("%s", "" + ChatColor.YELLOW + ChatColor.ITALIC + (displayName == null ? getCapabilityName() : displayName) + (amplifier != 0 ? " " + String.valueOf(amplifier) : ""))
-            );
+                    .replaceAll("%s", "" + ChatColor.YELLOW + ChatColor.ITALIC + (displayName == null ? getCapabilityName() : displayName) + (amplifier != 0 ? " " + String.valueOf(amplifier) : "")));
         }
     }
 }

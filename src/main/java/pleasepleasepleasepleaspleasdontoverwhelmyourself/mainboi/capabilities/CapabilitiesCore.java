@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 // TODO Add /capabilities debug setInterval (collector|assimilator) to set the interval time of the collector and the assimilator.
 //  Have the debug logger follow suit.
 // TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
+// TODO Have /capabilities assign be able to override extra data.
 
 /**
  * The code used to manage capabilities.
@@ -472,20 +473,12 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                     // Lists all registered capabilities on the server.
                     if (args.length == 1) {
                         if (CAPABILITIES_REGISTRY.isEmpty()) {
-                            if (sender instanceof Entity) {
-                                sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.no_capabilities"));
-
-                            } else
-                                sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.no_capabilities"));
+                            sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.list.no_capabilities"));
 
                         } else {
                             List<String> messageList = new ArrayList<>();
 
-                            if (sender instanceof Entity) {
-                                messageList.add(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.list_capabilities"));
-
-                            } else
-                                messageList.add(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.list_capabilities"));
+                            messageList.add(LocalizedMessages.getMessageFor(sender, "command.capabilities.list.list_capabilities"));
 
                             for (String capabilityName : CAPABILITIES_REGISTRY.keySet())
                                 messageList.add(" - " + ChatColor.YELLOW + capabilityName);
@@ -499,13 +492,8 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                         List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                         if (targets.isEmpty()) {
-                            if (sender instanceof Entity) {
-                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entity.not_found")
-                                        .replaceAll("%s", args[1]));
-
-                            } else
-                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entity.not_found")
-                                        .replaceAll("%s", args[1]));
+                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.list.entity.not_found")
+                                    .replaceAll("%s", args[1]));
 
                         // Singular target.
                         } else if (targets.size() == 1) {
@@ -513,24 +501,14 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                             Set<Capability> targetCapabilities = getCapabilities(target);
 
                             if (targetCapabilities.isEmpty()) {
-                                if (sender instanceof Entity) {
-                                    sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entity.no_capabilities")
-                                            .replaceAll("%s", target.getName()));
-
-                                } else
-                                    sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entity.no_capabilities")
-                                            .replaceAll("%s", target.getName()));
+                                sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.list.entity.no_capabilities")
+                                        .replaceAll("%s", target.getName()));
 
                             } else {
                                 List<String> messageList = new ArrayList<>();
 
-                                if (sender instanceof Entity) {
-                                    messageList.add(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entity.list_capabilities")
-                                            .replaceAll("%s", target.getName()));
-
-                                } else
-                                    messageList.add(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entity.list_capabilities")
-                                            .replaceAll("%s", target.getName()));
+                                messageList.add(LocalizedMessages.getMessageFor(sender, "command.capabilities.list.entity.list_capabilities")
+                                        .replaceAll("%s", target.getName()));
 
                                 for (Capability capability : targetCapabilities)
                                     messageList.add(" - " + ChatColor.GOLD + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
@@ -547,24 +525,14 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 totalCapabilities.addAll(getCapabilities(target));
 
                             if (totalCapabilities.isEmpty()) {
-                                if (sender instanceof Entity) {
-                                    sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entities.no_capabilities")
-                                            .replaceAll( "%s", Integer.toString(targets.size())));
-
-                                } else
-                                    sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entities.no_capabilities")
-                                            .replaceAll( "%s", Integer.toString(targets.size())));
+                                sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.list.entities.no_capabilities")
+                                        .replaceAll( "%s", Integer.toString(targets.size())));
 
                             } else {
                                 List<String> messageList = new ArrayList<>();
 
-                                if (sender instanceof Entity) {
-                                    messageList.add(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entities.list_capabilities")
-                                            .replaceAll( "%s", Integer.toString(targets.size())));
-
-                                } else
-                                    messageList.add(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entities.list_capabilities")
-                                            .replaceAll( "%s", Integer.toString(targets.size())));
+                                messageList.add(LocalizedMessages.getMessageFor(sender, "command.capabilities.list.entities.list_capabilities")
+                                        .replaceAll( "%s", Integer.toString(targets.size())));
 
                                 for (Capability capability : totalCapabilities)
                                     messageList.add(" - " + ChatColor.GOLD + capability.getCapabilityName());
@@ -590,20 +558,11 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                     }};
                                     debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
 
-                                    if (sender instanceof Entity) {
-                                        sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.start.started")
-                                                .replaceAll("%s", Long.toString(debugLoggerInterval)));
-
-                                    } else
-                                        sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.start.started")
-                                                .replaceAll("%s", Long.toString(debugLoggerInterval)));
+                                    sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.start.started")
+                                            .replaceAll("%s", Long.toString(debugLoggerInterval)));
 
                                 } else
-                                    if (sender instanceof Entity) {
-                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.start.already_started"));
-
-                                    } else
-                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.start.already_started"));
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.start.already_started"));
 
                                 break;
 
@@ -613,18 +572,10 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                     debugRunnable.cancel();
                                     debugRunnable = null;
 
-                                    if (sender instanceof Entity) {
-                                        sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.stop.stopped"));
-
-                                    } else
-                                        sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.stop.stopped"));
+                                    sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.stop.stopped"));
 
                                 } else
-                                    if (sender instanceof Entity) {
-                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.stop.already_stopped"));
-
-                                    } else
-                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.stop.already_stopped"));
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.stop.already_stopped"));
 
                                 break;
 
@@ -652,56 +603,29 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                                 debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
                                             }
 
-                                            if (sender instanceof Entity) {
-                                                sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.set")
-                                                        .replaceAll("%s", Long.toString(debugLoggerInterval)));
-
-                                            } else
-                                                sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.set")
-                                                        .replaceAll("%s", Long.toString(debugLoggerInterval)));
+                                            sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.setinterval.set")
+                                                    .replaceAll("%s", Long.toString(debugLoggerInterval)));
 
                                         } else
-                                            if (sender instanceof Entity) {
-                                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.invalid_number")
-                                                        .replaceAll("%s", args[2]));
-
-                                            } else
-                                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.invalid_number")
-                                                        .replaceAll("%s", args[2]));
+                                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.setinterval.invalid_number")
+                                                    .replaceAll("%s", args[2]));
 
                                     } catch (NumberFormatException ignored) {
-                                        if (sender instanceof Entity) {
-                                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.invalid")
-                                                    .replaceAll("%s", args[2]));
-
-                                        } else
-                                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.invalid")
-                                                    .replaceAll("%s", args[2]));
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.setinterval.invalid")
+                                                .replaceAll("%s", args[2]));
                                     }
 
                                 } else
-                                    if (sender instanceof Entity) {
-                                        sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.usage"));
-
-                                    } else
-                                        sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.usage"));
+                                    sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.setinterval.usage"));
 
                                 break;
 
                             default:
-                                if (sender instanceof Entity) {
-                                    sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.usage"));
-
-                                } else
-                                    sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.usage"));
+                                sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.usage"));
                         }
 
                     } else
-                        if (sender instanceof Entity) {
-                            sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.usage"));
-
-                        } else
-                            sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.usage"));
+                        sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.usage"));
 
                     return true;
 
@@ -715,40 +639,45 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                             List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                             if (targets.isEmpty()) {
-                                sender.sendMessage(ChatColor.RED + "Entity '" + args[1] + "' cannot be found.");
+                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.none_found")
+                                        .replaceAll("%s", args[1]));
 
                             } else if (targets.size() == 1) {
                                 Entity target = targets.get(0);
                                 boolean success = assignCapability(target, capability);
 
                                 if (success) {
-                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + "' to " + target.getName() + ".");
+                                    sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.success")
+                                            .replaceAll("%s1", ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.RESET)
+                                            .replaceAll("%s2", target.getName()));
 
                                 } else
-                                    sender.sendMessage(ChatColor.RED + "The entity already has this capability");
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.already_set")
+                                            .replaceAll("%s", target.getName()));
 
                             } else {
-                                boolean success = false;
                                 int effectedEntityCount = 0;
 
                                 for (Entity target : targets)
                                     if (assignCapability(target, capability)) {
-                                        success = true;
                                         effectedEntityCount++;
                                     }
 
-                                if (success) {
-                                    sender.sendMessage("Assigned '" + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.WHITE + "' to " + effectedEntityCount + " entities.");
+                                if (effectedEntityCount > 0) {
+                                    sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.success_multi")
+                                            .replaceAll("%s1", ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()) + ChatColor.RESET)
+                                            .replaceAll("%s2", Integer.toString(effectedEntityCount)));
 
                                 } else
-                                    sender.sendMessage(ChatColor.RED + "All of the entities already have this capability.");
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.already_set_multi"));
                             }
 
                         } else
-                            sender.sendMessage(ChatColor.RED + "'" + args[2] + "' is not a known capability");
+                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.not_known")
+                                    .replaceAll("%s", args[2]));
 
                     } else
-                        sender.sendMessage("Usage: /capabilities assign <targets> <capability>");
+                        sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.usage"));
 
                     return true;
 

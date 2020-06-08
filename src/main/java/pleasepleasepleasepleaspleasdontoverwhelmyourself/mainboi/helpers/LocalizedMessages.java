@@ -3,6 +3,7 @@ package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -53,8 +54,8 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
                             localizedMessages.put(languageCode.getAsString(), keyMessageSet);
                         }
 
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                    } catch (FileNotFoundException | JsonSyntaxException exception) {
+                        exception.printStackTrace();
                     }
             }
 
@@ -69,6 +70,9 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
         }
 
         defaultLanguage = givenLanguage;
+
+        if (localizedMessages.size() == 0)
+            MainBoi.getInstance().getLogger().severe("There are no valid localization files loaded into the plugin. Names and messages will be nonsensical! Please place a valid localization file into MainBoi/lang/");
 
         // Registers command listeners.
         PluginCommand capabilitiesCommand = Objects.requireNonNull(MainBoi.getInstance().getCommand("setlocale"));
@@ -248,6 +252,28 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
         return getMessage(languageCode, baseMessage);
     }
 
+    /**
+     * Gets the localized form of a message for a command sender.
+     * For players it returns the localization of that message in their locale.
+     * For anything else it returns the localization of that message in the default locale.
+     *
+     * @param sender The CommandSender to get the message for.
+     * @param baseMessage The base from of the message. (e.x.: entity.weird_thing.name).
+     *
+     * @return The localized form of the message in the sender's locale, or the default, if its locale cannot be found.
+     */
+    public static String getMessageFor(CommandSender sender, String baseMessage) {
+        String languageCode;
+
+        if (sender instanceof Player) {
+            languageCode = getPlayerLanguage((Player) sender);
+
+        } else
+            languageCode = defaultLanguage;
+
+        return getMessage(languageCode, baseMessage);
+    }
+
 
 
     @Override
@@ -284,12 +310,12 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
                     player.sendMessage(ChatColor.RED + getMessage(languageCode, "command.setlocale.already_set"));
 
             } else
-                player.sendMessage(ChatColor.RED + getMessage(getPlayerLanguage(player), "command.setlocale.not_found").replaceFirst("%s", selectedLanguage));
+                player.sendMessage(ChatColor.RED + getMessageFor(player, "command.setlocale.not_found").replaceFirst("%s", selectedLanguage));
 
             return true;
 
         } else
-            sender.sendMessage("Only players can use /setlocale");
+            sender.sendMessage(ChatColor.RED + getMessage(defaultLanguage, "command.setlocale.only_players"));
 
         return false;
     }
