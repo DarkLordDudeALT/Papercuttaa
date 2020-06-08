@@ -86,6 +86,11 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
     }
 
     @Override
+    public String getBaseName() {
+        return "chance_of_precipretation.statuseffect.freeze.name";
+    }
+
+    @Override
     public String getExtraData() {
         return super.getExtraData() + "," + initialEntityYaw + "," + initialEntityPitch;
     }
@@ -217,7 +222,7 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
             for (Capability capability : entityCapabilities)
                 if (capability instanceof FreezeEffect) {
                     FreezeEffect freezeEffect = (FreezeEffect) capability;
-                    freezeEffect.setDuration(freezeEffect.getDuration() - 3);
+                    freezeEffect.setDuration((int) (freezeEffect.getDuration() * 0.95));
 
                     entityJumpEvent.setCancelled(true);
 

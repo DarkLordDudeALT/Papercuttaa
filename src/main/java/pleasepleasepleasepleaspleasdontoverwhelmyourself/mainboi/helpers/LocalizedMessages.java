@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 
@@ -112,51 +113,10 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
     }
 
     /**
-     * Gets the key of the first key-value pair found that contains localizedMessage as a value.
-     *
-     * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa).
-     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru).
-     *
-     * @return The key of the first key-value pair found that contains localizedMessage as a value, or null, if it isn't found.
+     * @return The default language code set in the configuration file.
      */
-    public static String getKey(String languageCode, String localizedMessage) {
-        if (localizedMessages.containsKey(languageCode))
-            for (Map.Entry<String, String> messageEntries : localizedMessages.get(languageCode).entrySet())
-                if (messageEntries.getValue().equals(localizedMessage))
-                    return messageEntries.getKey();
-
-        return null;
-    }
-
-    /**
-     * Gets the key of the first key-value pair of the any language found that contains localizedMessage as a value.
-     *
-     * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa).
-     *
-     * @return The key of the first key-value pair of any language found that contains localizedMessage as a value, or null, if it isn't found.
-     */
-    public static String getKey(String localizedMessage) {
-        for (HashMap<String, String> messageSetEntries : localizedMessages.values())
-            for (Map.Entry<String, String> messageEntries : messageSetEntries.entrySet())
-                if (messageEntries.getValue().equals(localizedMessage))
-                    return messageEntries.getKey();
-
-        return null;
-    }
-
-    /**
-     * Gets a message in its localized form using its language and its base form.
-     *
-     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru).
-     * @param baseMessage The base form of the message. (e.x.: entity.weird_thing.name).
-     *
-     * @return The localized form of this message. Will return the base message if no localized form is found.
-     */
-    public static String getMessage(String languageCode, String baseMessage) {
-        if (localizedMessages.containsKey(languageCode))
-            return localizedMessages.get(languageCode).get(baseMessage);
-
-        return baseMessage;
+    public static String getDefaultLanguage() {
+        return defaultLanguage;
     }
 
     /**
@@ -165,6 +125,7 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
     public static Set<String> getLanguageCodes() {
         return localizedMessages.keySet();
     }
+
 
     /**
      * Returns a player's language code. defaults to defaultLanguage.
@@ -201,7 +162,7 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
         if (localizedMessages.containsKey(languageCode)) {
             for (String tag : player.getScoreboardTags())
                 if (tag.startsWith("locale="))
-                    if (tag.equals("locale=" + languageCode)) {
+                    if (!tag.equals("locale=" + languageCode)) {
                         player.removeScoreboardTag(tag);
                         break;
 
@@ -215,6 +176,77 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
         return false;
     }
 
+
+    /**
+     * Gets the key of the first key-value pair found that contains localizedMessage as a value.
+     *
+     * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa).
+     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru).
+     *
+     * @return The key of the first key-value pair found that contains localizedMessage as a value, or null, if it isn't found.
+     */
+    public static String getKey(String languageCode, String localizedMessage) {
+        if (localizedMessages.containsKey(languageCode))
+            for (Map.Entry<String, String> messageEntries : localizedMessages.get(languageCode).entrySet())
+                if (messageEntries.getValue().equals(localizedMessage))
+                    return messageEntries.getKey();
+
+        return null;
+    }
+
+    /**
+     * Gets the key of the first key-value pair of the any language found that contains localizedMessage as a value.
+     *
+     * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa).
+     *
+     * @return The key of the first key-value pair of any language found that contains localizedMessage as a value, or null, if it isn't found.
+     */
+    public static String getKey(String localizedMessage) {
+        for (HashMap<String, String> messageSetEntries : localizedMessages.values())
+            for (Map.Entry<String, String> messageEntries : messageSetEntries.entrySet())
+                if (messageEntries.getValue().equals(localizedMessage))
+                    return messageEntries.getKey();
+
+        return null;
+    }
+
+
+    /**
+     * Gets a message in its localized form using its language and its base form.
+     *
+     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru).
+     * @param baseMessage The base form of the message. (e.x.: entity.weird_thing.name).
+     *
+     * @return The localized form of this message. Will return the base message if no localized form is found.
+     */
+    public static String getMessage(String languageCode, String baseMessage) {
+        if (localizedMessages.containsKey(languageCode))
+            return localizedMessages.get(languageCode).get(baseMessage);
+
+        return baseMessage;
+    }
+
+    /**
+     * Gets the localized form of a message for an entity.
+     * For players it returns the localization of that message in their locale.
+     * For anything else it returns the localization of that message in the default locale.
+     *
+     * @param entity The entity to get the message for.
+     * @param baseMessage The base from of the message. (e.x.: entity.weird_thing.name).
+     *
+     * @return The localized form of the message in the entity's locale, or the default, if its locale cannot be found.
+     */
+    public static String getMessageFor(Entity entity, String baseMessage) {
+        String languageCode;
+
+        if (entity instanceof Player) {
+            languageCode = getPlayerLanguage((Player) entity);
+
+        } else
+            languageCode = defaultLanguage;
+
+        return getMessage(languageCode, baseMessage);
+    }
 
 
 

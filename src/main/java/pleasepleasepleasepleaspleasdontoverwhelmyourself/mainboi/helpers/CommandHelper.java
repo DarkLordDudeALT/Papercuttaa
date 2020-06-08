@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Code to help with writing custom commands.
@@ -26,11 +27,23 @@ public final class CommandHelper {
     public static List<Entity> getCommandTargets(CommandSender sender, String selector) {
         List<Entity> targets = new ArrayList<>();
 
+        // Tries to get entities using a selector like @a.
         try {
             targets.addAll(Bukkit.selectEntities(sender, selector));
 
         } catch (IllegalArgumentException ignore) {}
 
+        // Tries to get entities using a UUID.
+        if (targets.isEmpty())
+            try {
+                Entity target = Bukkit.getEntity(UUID.fromString(selector));
+
+                if (target != null)
+                    targets.add(target);
+
+            } catch (IllegalArgumentException ignored) {}
+
+        // Tries to get entities using a player name.
         if (targets.isEmpty()) {
             Player target = Bukkit.getPlayerExact(selector);
 
@@ -59,7 +72,7 @@ public final class CommandHelper {
 
         if (excludedEntities != null) {
             for (Entity entity : nearbyEntities)
-                if (entity.getLocation().distanceSquared(location) <= radiusSquared && !excludedEntities.contains(entity))
+                if (!excludedEntities.contains(entity) && entity.getLocation().distanceSquared(location) <= radiusSquared)
                     entitiesInRadius.add(entity);
 
         } else

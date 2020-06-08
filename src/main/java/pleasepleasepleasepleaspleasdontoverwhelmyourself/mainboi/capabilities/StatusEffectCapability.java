@@ -3,6 +3,7 @@ package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.LocalizedMessages;
 
 /**
  * Represents a status effect, much like potion effects.
@@ -120,6 +121,13 @@ public abstract class StatusEffectCapability extends Capability {
         this.notify = notify;
     }
 
+    /**
+     * Returns the base name for an effect. (e.x.: effect.generic_effect.name).
+     */
+    public String getBaseName() {
+        return null;
+    }
+
 
 
     @Override
@@ -135,19 +143,23 @@ public abstract class StatusEffectCapability extends Capability {
     @Override
     public void onAssignment(Entity entity) {
         if (notify && entity instanceof Player) {
-            String amplifierString = amplifier != 0 ? " " + String.valueOf(amplifier) : "";
+            String displayName = LocalizedMessages.getMessageFor(entity, getBaseName());
 
-            entity.sendMessage("" + ChatColor.YELLOW + ChatColor.ITALIC + this.getCapabilityName() + amplifierString + ChatColor.RESET +
-                    " has been applied to you for " + ChatColor.YELLOW + ChatColor.ITALIC + Math.round(duration / 20.0) + ChatColor.RESET + " seconds");
+            entity.sendMessage(LocalizedMessages.getMessageFor(entity, "capability.statuseffect.notify_give")
+                    .replaceAll("%s1", "" + ChatColor.YELLOW + ChatColor.ITALIC + (displayName == null ? getCapabilityName() : displayName) + (amplifier != 0 ? " " + String.valueOf(amplifier) : "") + ChatColor.RESET)
+                    .replaceAll("%s2","" + ChatColor.YELLOW + ChatColor.ITALIC + Math.round(duration / 20.0) + ChatColor.RESET)
+            );
         }
     }
 
     @Override
     public void onRevoke(Entity entity) {
         if (notify && entity instanceof Player) {
-            String amplifierString = amplifier != 0 ? " " + String.valueOf(amplifier) : "";
+            String displayName = LocalizedMessages.getMessageFor(entity, getBaseName());
 
-            entity.sendMessage("You no longer have the effect " + ChatColor.YELLOW + ChatColor.ITALIC + this.getCapabilityName() + amplifierString + ChatColor.RESET + ".");
+            entity.sendMessage(LocalizedMessages.getMessageFor(entity, "capability.statuseffect.notify_remove")
+                    .replaceAll("%s", "" + ChatColor.YELLOW + ChatColor.ITALIC + (displayName == null ? getCapabilityName() : displayName) + (amplifier != 0 ? " " + String.valueOf(amplifier) : ""))
+            );
         }
     }
 }

@@ -271,7 +271,7 @@ public class IceEliteCapability extends Capability implements Listener {
             Location entityLocation = entity.getLocation();
 
             // Them: Why are you spawning so many particles, with more than a couple ice bombs at a time it will lag badly, REEEEEEEE!!!11!
-            // Me: Hahaha particle go brrrrr
+            // Me: Hahaha particle go brrrrr.
             double angle = 0.31415926535897932385 * age;
             double verticalRadius = (age - 20) * 0.15;
             double horizontalRadius = Math.sqrt(9 - verticalRadius * verticalRadius);

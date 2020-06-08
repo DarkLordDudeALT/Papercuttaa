@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.CommandHelper;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.LocalizedMessages;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -466,18 +467,25 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length >= 1)
             switch (args[0].toLowerCase()) {
-                // Lists all registered capabilities on the server.
+                // /capabilities list...
                 case "list":
+                    // Lists all registered capabilities on the server.
                     if (args.length == 1) {
                         if (CAPABILITIES_REGISTRY.isEmpty()) {
-                            sender.sendMessage("There are no registered capabilities.");
+                            if (sender instanceof Entity) {
+                                sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.no_capabilities"));
 
-                        } else if (CAPABILITIES_REGISTRY.size() == 1) {
-                            sender.sendMessage("The registered capability is: " + ChatColor.YELLOW + CAPABILITIES_REGISTRY.keySet().toArray()[0]);
+                            } else
+                                sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.no_capabilities"));
 
                         } else {
                             List<String> messageList = new ArrayList<>();
-                            messageList.add("The registered capabilities are: ");
+
+                            if (sender instanceof Entity) {
+                                messageList.add(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.list_capabilities"));
+
+                            } else
+                                messageList.add(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.list_capabilities"));
 
                             for (String capabilityName : CAPABILITIES_REGISTRY.keySet())
                                 messageList.add(" - " + ChatColor.YELLOW + capabilityName);
@@ -486,26 +494,43 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 sender.sendMessage(message);
                         }
 
+                    // Lists the capabilities of the entities found in the selector.
                     } else {
                         List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                         if (targets.isEmpty()) {
-                            sender.sendMessage(ChatColor.RED + "Entity '" + args[1] + "' cannot be found.");
+                            if (sender instanceof Entity) {
+                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entity.not_found")
+                                        .replaceAll("%s", args[1]));
 
+                            } else
+                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entity.not_found")
+                                        .replaceAll("%s", args[1]));
+
+                        // Singular target.
                         } else if (targets.size() == 1) {
                             Entity target = targets.get(0);
                             Set<Capability> targetCapabilities = getCapabilities(target);
 
                             if (targetCapabilities.isEmpty()) {
-                                sender.sendMessage(target.getName() + " has no capabilities.");
+                                if (sender instanceof Entity) {
+                                    sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entity.no_capabilities")
+                                            .replaceAll("%s", target.getName()));
 
-                            } else if (targetCapabilities.size() == 1) {
-                                Capability entityCapability = targetCapabilities.iterator().next();
-                                sender.sendMessage(target.getName() + " has the capability: " + ChatColor.YELLOW + joinNameAndExtra(entityCapability.getCapabilityName(), entityCapability.getExtraData()) + ChatColor.WHITE + ".");
+                                } else
+                                    sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entity.no_capabilities")
+                                            .replaceAll("%s", target.getName()));
 
                             } else {
                                 List<String> messageList = new ArrayList<>();
-                                messageList.add(target.getName() + " has the following capabilities: ");
+
+                                if (sender instanceof Entity) {
+                                    messageList.add(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entity.list_capabilities")
+                                            .replaceAll("%s", target.getName()));
+
+                                } else
+                                    messageList.add(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entity.list_capabilities")
+                                            .replaceAll("%s", target.getName()));
 
                                 for (Capability capability : targetCapabilities)
                                     messageList.add(" - " + ChatColor.GOLD + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
@@ -514,6 +539,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                     sender.sendMessage(message);
                             }
 
+                        // Multiple targets.
                         } else {
                             Set<Capability> totalCapabilities = new HashSet<>();
 
@@ -521,15 +547,24 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 totalCapabilities.addAll(getCapabilities(target));
 
                             if (totalCapabilities.isEmpty()) {
-                                sender.sendMessage(targets.size() + " entities have no capabilities.");
+                                if (sender instanceof Entity) {
+                                    sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entities.no_capabilities")
+                                            .replaceAll( "%s", Integer.toString(targets.size())));
 
-                            } else if (totalCapabilities.size() == 1) {
-                                Iterator<Capability> capabilityIterator = totalCapabilities.iterator();
-                                sender.sendMessage(targets.size() + " entities have, total, the capability: " + ChatColor.YELLOW + capabilityIterator.next().getCapabilityName() + ChatColor.WHITE + ".");
+                                } else
+                                    sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entities.no_capabilities")
+                                            .replaceAll( "%s", Integer.toString(targets.size())));
 
                             } else {
                                 List<String> messageList = new ArrayList<>();
-                                messageList.add(targets.size() + " entities have the following total capabilities: ");
+
+                                if (sender instanceof Entity) {
+                                    messageList.add(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.list.entities.list_capabilities")
+                                            .replaceAll( "%s", Integer.toString(targets.size())));
+
+                                } else
+                                    messageList.add(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.list.entities.list_capabilities")
+                                            .replaceAll( "%s", Integer.toString(targets.size())));
 
                                 for (Capability capability : totalCapabilities)
                                     messageList.add(" - " + ChatColor.GOLD + capability.getCapabilityName());
@@ -547,6 +582,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 case "debug":
                     if (args.length >= 2) {
                         switch (args[1].toLowerCase()) {
+                            // Starts the debugger.
                             case "start":
                                 if (debugRunnable == null) {
                                     debugRunnable = new BukkitRunnable() { @Override public void run() {
@@ -554,62 +590,118 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                     }};
                                     debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
 
-                                    sender.sendMessage("Debugging has been started, will log every " + debugLoggerInterval + " ticks.");
+                                    if (sender instanceof Entity) {
+                                        sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.start.started")
+                                                .replaceAll("%s", Long.toString(debugLoggerInterval)));
+
+                                    } else
+                                        sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.start.started")
+                                                .replaceAll("%s", Long.toString(debugLoggerInterval)));
 
                                 } else
-                                    sender.sendMessage(ChatColor.RED + "The capabilities debugger is already started.");
+                                    if (sender instanceof Entity) {
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.start.already_started"));
+
+                                    } else
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.start.already_started"));
 
                                 break;
 
+                            // Stops the debugger.
                             case "stop":
                                 if (debugRunnable != null) {
                                     debugRunnable.cancel();
                                     debugRunnable = null;
 
-                                    sender.sendMessage("Debugging has been stopped.");
+                                    if (sender instanceof Entity) {
+                                        sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.stop.stopped"));
+
+                                    } else
+                                        sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.stop.stopped"));
 
                                 } else
-                                    sender.sendMessage(ChatColor.RED + "The capabilities debugger is already stopped.");
+                                    if (sender instanceof Entity) {
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.stop.already_stopped"));
+
+                                    } else
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.stop.already_stopped"));
 
                                 break;
 
+                            // Prints out the entity queue.
                             case "dump":
                                 logEntityQueueDump();
-
                                 break;
 
+                            // Sets the interval at which the entity queue is logged.
                             case "setinterval":
                                 if (args.length >= 3) {
                                     try {
                                         debugLoggerInterval = Long.parseLong(args[2]);
 
-                                        if (debugRunnable != null) {
-                                            debugRunnable.cancel();
+                                        if (debugLoggerInterval > 0) {
+                                            if (debugRunnable != null) {
+                                                debugRunnable.cancel();
 
-                                            debugRunnable = new BukkitRunnable() { @Override public void run() {
-                                                logEntityQueueDump();
-                                            }};
-                                            debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
-                                        }
+                                                debugRunnable = new BukkitRunnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        logEntityQueueDump();
+                                                    }
+                                                };
+                                                debugRunnable.runTaskTimer(MainBoi.getInstance(), 100, debugLoggerInterval);
+                                            }
 
-                                        sender.sendMessage("Debug interval successfully set to " + debugLoggerInterval + " ticks.");
+                                            if (sender instanceof Entity) {
+                                                sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.set")
+                                                        .replaceAll("%s", Long.toString(debugLoggerInterval)));
+
+                                            } else
+                                                sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.set")
+                                                        .replaceAll("%s", Long.toString(debugLoggerInterval)));
+
+                                        } else
+                                            if (sender instanceof Entity) {
+                                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.invalid_number")
+                                                        .replaceAll("%s", args[2]));
+
+                                            } else
+                                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.invalid_number")
+                                                        .replaceAll("%s", args[2]));
 
                                     } catch (NumberFormatException ignored) {
-                                        sender.sendMessage(ChatColor.RED + args[2] + " must be a number!");
+                                        if (sender instanceof Entity) {
+                                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.invalid")
+                                                    .replaceAll("%s", args[2]));
+
+                                        } else
+                                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.invalid")
+                                                    .replaceAll("%s", args[2]));
                                     }
 
                                 } else
-                                    sender.sendMessage("Usage: /capabilities debug setInterval <intervalTime>");
+                                    if (sender instanceof Entity) {
+                                        sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.setinterval.usage"));
+
+                                    } else
+                                        sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.setinterval.usage"));
 
                                 break;
 
                             default:
-                                sender.sendMessage("Usage: /capabilities debug (start|stop|dump|setInterval)");
-                                break;
+                                if (sender instanceof Entity) {
+                                    sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.usage"));
+
+                                } else
+                                    sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.usage"));
                         }
 
                     } else
-                        sender.sendMessage("Usage: /capabilities debug (start|stop|dump|setInterval)");
+                        if (sender instanceof Entity) {
+                            sender.sendMessage(LocalizedMessages.getMessageFor((Entity) sender, "command.capabilities.debug.usage"));
+
+                        } else
+                            sender.sendMessage(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "command.capabilities.debug.usage"));
 
                     return true;
 
@@ -756,37 +848,55 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
         return false;
     }
 
-    // A runnable that logs a dump of the Entity Queue to the server and its admins.
+    /**
+     * Logs a dump of the entity queue to the server and sends a copy to the admins through chat.
+     */
     private static void logEntityQueueDump() {
         List<String> entityQueueDump = new ArrayList<>();
-        entityQueueDump.add("Entity Queue dump:");
+        entityQueueDump.add("Entity Queue dump: ");
 
-        if (ENTITY_CAPABILITY_QUEUE.isEmpty()) {
-            entityQueueDump.add(" Nothing!");
+        // Grabs entities and their capabilities from the queue and adds it to the queue.
+        for (Map.Entry<Entity, Set<Capability>> entityQueueEntry : ENTITY_CAPABILITY_QUEUE.entrySet()) {
+            Entity entity = entityQueueEntry.getKey();
+            Set<Capability> entityCapabilities = entityQueueEntry.getValue();
 
-        } else
-            for (Map.Entry<Entity, Set<Capability>> entityQueueEntry : ENTITY_CAPABILITY_QUEUE.entrySet()) {
-                Entity entity = entityQueueEntry.getKey();
-                Set<Capability> entityCapabilities = entityQueueEntry.getValue();
+            entityQueueDump.add(" (" + ChatColor.YELLOW + entity.getType() + ChatColor.WHITE + ") " + entity.getName() + ":");
 
-                entityQueueDump.add(" (" + ChatColor.YELLOW + entity.getType() + ChatColor.WHITE + ") " + entity.getName() + ":");
-
-                for (Capability capability : entityCapabilities)
-                    entityQueueDump.add("  - " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
-            }
+            for (Capability capability : entityCapabilities)
+                entityQueueDump.add("  - " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
+        }
 
         entityQueueDump.add("End of Entity Queue dump.");
 
+        // Logs queue to server.
         Logger bukkitLogger = Bukkit.getLogger();
-        for (String message : entityQueueDump)
-            bukkitLogger.info(message);
 
+        bukkitLogger.info(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "capabilities.debugger.dump_start"));
+
+        if (entityQueueDump.isEmpty()) {
+            bukkitLogger.info(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "capabilities.debugger.empty"));
+
+        } else
+            for (String message : entityQueueDump)
+                bukkitLogger.info(message);
+
+        bukkitLogger.info(LocalizedMessages.getMessage(LocalizedMessages.getDefaultLanguage(), "capabilities.debugger.dump_stop"));
+
+        // Sends logs to admins.
         for (OfflinePlayer operator : Bukkit.getOperators()) {
             Player admin = operator.getPlayer();
 
-            if (admin != null)
-                for (String message : entityQueueDump)
-                    admin.sendMessage(message);
+            if (admin != null) {
+                admin.sendMessage(LocalizedMessages.getMessageFor(admin, "capabilities.debugger.dump_start"));
+
+                if (entityQueueDump.isEmpty()) {
+                    admin.sendMessage(LocalizedMessages.getMessageFor(admin, "capabilities.debugger.empty"));
+
+                } else
+                    admin.sendMessage((String[]) entityQueueDump.toArray());
+
+                admin.sendMessage(LocalizedMessages.getMessageFor(admin, "capabilities.debugger.dump_stop"));
+            }
         }
     }
 
