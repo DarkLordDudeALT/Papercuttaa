@@ -1,0 +1,35 @@
+{
+  "language.code": "en_us",
+  "language.region": "US",
+  "language.name": "English (US)",
+  
+  "command.setlocale.success": "Successfully set your locale to English (US)",
+  "command.setlocale.not_found": "%s is not a known language",
+  "command.setlocale.already_set": "Your locale is already set to English (US)",
+  
+  "command.capabilities.list.no_capabilities": "There are no registered capabilities",
+  "command.capabilities.list.list_capabilities": "The registered capability(ies) is/are: ",
+  "command.capabilities.list.entity.not_found": "Entity '%s' cannot be found",
+  "command.capabilities.list.entity.no_capabilities": "%s has no capabilities",
+  "command.capabilities.list.entity.list_capabilities": "%s has the following capability(ies): ",
+  "command.capabilities.list.entities.no_capabilities": "%s entities have no capabilities",
+  "command.capabilities.list.entities.list_capabilities": "%s entities have, overall, the following capability(ies): ",
+  "command.capabilities.debug.start.started": "Debugging has been started, will log every %s ticks",
+  "command.capabilities.debug.start.already_started": "The capabilities debugger is already started",
+  "command.capabilities.debug.stop.stopped": "Debugging has been stopped",
+  "command.capabilities.debug.stop.already_stopped": "The capabilities debugger is already stopped",
+  "command.capabilities.debug.setinterval.set": "Debug interval successfully set to %s ticks",
+  "command.capabilities.debug.setinterval.invalid": "%s must be a number!",
+  "command.capabilities.debug.setinterval.invalid_number": "%s must be greater than 0!",
+  "command.capabilities.debug.setinterval.usage": "Usage: /capabilities debug setInterval <intervalTime>",
+  "command.capabilities.debug.usage": "Usage: /capabilities debug (start|stop|dump|setInterval)",
+  
+  "capabilities.debugger.dump_start": "Entity Queue dump: ",
+  "capabilities.debugger.empty": " Nothing!",
+  "capabilities.debugger.dump_stop": "End of Entity Queue dump",
+  
+  "capability.statuseffect.notify_give": "%s1 has been applied to you for %s2 second(s)",
+  "capability.statuseffect.notify_remove": "You no longer have %s",
+  
+  "chance_of_precipretation.statuseffect.freeze.name": "Freeze"
+}
