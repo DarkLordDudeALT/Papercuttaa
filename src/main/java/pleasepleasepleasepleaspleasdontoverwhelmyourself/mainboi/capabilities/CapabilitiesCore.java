@@ -492,7 +492,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                         List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                         if (targets.isEmpty()) {
-                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.list.entity.not_found")
+                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command._common.entity.not_found")
                                     .replaceAll("%s", args[1]));
 
                         // Singular target.
@@ -611,7 +611,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                                     .replaceAll("%s", args[2]));
 
                                     } catch (NumberFormatException ignored) {
-                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.setinterval.invalid")
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.debug.setinterval.invalid_number")
                                                 .replaceAll("%s", args[2]));
                                     }
 
@@ -639,7 +639,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                             List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                             if (targets.isEmpty()) {
-                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.none_found")
+                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command._common.entity.not_found")
                                         .replaceAll("%s", args[1]));
 
                             } else if (targets.size() == 1) {
@@ -673,7 +673,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                             }
 
                         } else
-                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.assign.not_known")
+                            sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.not_known")
                                     .replaceAll("%s", args[2]));
 
                     } else
@@ -685,24 +685,27 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                 // Revokes capabilities from entities.
                 case "revoke":
                     if (args.length >= 3) {
+                        // Revokes all capabilities from entities.
                         if (args[2].equals("__all")) {
                             List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                             if (targets.isEmpty()) {
-                                sender.sendMessage(ChatColor.RED + "Entity '" + args[1] + "' cannot be found.");
+                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command._common.entity.not_found")
+                                        .replaceAll("%s", args[1]));
 
                             } else if (targets.size() == 1) {
                                 Entity target = targets.get(0);
                                 Set<Capability> targetCapabilities = getCapabilities(target);
 
                                 if (targetCapabilities.isEmpty()) {
-                                    sender.sendMessage(ChatColor.RED + "The entity has no capabilities.");
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.has_none"));
 
                                 } else {
                                     for (Capability capability : targetCapabilities)
                                         revokeCapability(target, capability);
 
-                                    sender.sendMessage("Revoked all capabilities from " + target.getName() + ".");
+                                    sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.removed_all")
+                                            .replaceAll("%s", target.getName()));
                                 }
 
                             } else {
@@ -722,12 +725,14 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 }
 
                                 if (noCapabilities) {
-                                    sender.sendMessage(ChatColor.RED + "All of the entities have no capabilities.");
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.has_none_multi"));
 
                                 } else
-                                    sender.sendMessage("Revoked all capabilities from " + effectedEntityCount + " entities.");
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.removed_all_multi")
+                                            .replaceAll("%s", Integer.toString(effectedEntityCount)));
                             }
 
+                        // Revokes a specific capability.
                         } else {
                             Capability capability = getCapabilityFromTag(args[2]);
 
@@ -735,17 +740,20 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                 List<Entity> targets = CommandHelper.getCommandTargets(sender, args[1]);
 
                                 if (targets.isEmpty()) {
-                                    sender.sendMessage(ChatColor.RED + "Entity '" + args[1] + "' cannot be found.");
+                                    sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command._common.entity.not_found")
+                                            .replaceAll("%s", args[1]));
 
                                 } else if (targets.size() == 1) {
                                     Entity target = targets.get(0);
                                     boolean success = revokeCapability(target, capability);
 
                                     if (success) {
-                                        sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + target.getName() + ".");
+                                        sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.removed")
+                                                .replaceAll("%s1", ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.RESET)
+                                                .replaceAll("%s2", target.getName()));
 
                                     } else
-                                        sender.sendMessage(ChatColor.RED + "The entity does not have this capability.");
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.does_not_have"));
 
                                 } else {
                                     boolean success = false;
@@ -758,18 +766,21 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
                                         }
 
                                     if (success) {
-                                        sender.sendMessage("Revoked '" + ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.WHITE + "' from " + effectedEntityCount + " entities.");
+                                        sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.removed_multi")
+                                                .replaceAll("%s1", ChatColor.YELLOW + capability.getCapabilityName() + ChatColor.RESET)
+                                                .replaceAll("%s2", Integer.toString(effectedEntityCount)));
 
                                     } else
-                                        sender.sendMessage(ChatColor.RED + "None of the entities have this capability.");
+                                        sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.does_not_have_multi"));
                                 }
 
                             } else
-                                sender.sendMessage(ChatColor.RED + "'" + args[2] + "' is not a known capability.");
+                                sender.sendMessage(ChatColor.RED + LocalizedMessages.getMessageFor(sender, "command.capabilities.not_known")
+                                        .replaceAll("%s", args[2]));
                         }
 
                     } else
-                        sender.sendMessage("Usage: /capabilities revoke <targets> (<capability>|__all)");
+                        sender.sendMessage(LocalizedMessages.getMessageFor(sender, "command.capabilities.revoke.usage"));
 
                     return true;
             }
@@ -782,7 +793,6 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      */
     private static void logEntityQueueDump() {
         List<String> entityQueueDump = new ArrayList<>();
-        entityQueueDump.add("Entity Queue dump: ");
 
         // Grabs entities and their capabilities from the queue and adds it to the queue.
         for (Map.Entry<Entity, Set<Capability>> entityQueueEntry : ENTITY_CAPABILITY_QUEUE.entrySet()) {
@@ -794,8 +804,6 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
             for (Capability capability : entityCapabilities)
                 entityQueueDump.add("  - " + ChatColor.YELLOW + joinNameAndExtra(capability.getCapabilityName(), capability.getExtraData()));
         }
-
-        entityQueueDump.add("End of Entity Queue dump.");
 
         // Logs queue to server.
         Logger bukkitLogger = Bukkit.getLogger();
