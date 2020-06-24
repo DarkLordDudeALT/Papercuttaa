@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 // TODO Add /capabilities debug setInterval (collector|assimilator) to set the interval time of the collector and the assimilator.
-//  Have the debug logger follow suit.
+//   Have the debug logger follow suit.
 // TODO Have debugInterval, collectorRunInterval, assimilatorRunInterval and be loaded to and from a file on plugin shutdown and startup.
 // TODO Have /capabilities assign be able to override extra data.
 

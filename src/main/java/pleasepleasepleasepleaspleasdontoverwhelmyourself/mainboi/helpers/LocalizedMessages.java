@@ -158,22 +158,24 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
      * Language data is stored in tags.
      *
      * @param player The player to set the language of.
-     * @param languageCode The language to set it to.
+     * @param languageCode The language to set it to. (e.x.: en_us, tok, ja, ru)
      *
      * @return Whether or not the language was set.
      */
     public static boolean setPlayerLanguage(Player player, String languageCode) {
         if (localizedMessages.containsKey(languageCode)) {
+            String languageTag = "locale=" + languageCode;
+
             for (String tag : player.getScoreboardTags())
                 if (tag.startsWith("locale="))
-                    if (!tag.equals("locale=" + languageCode)) {
+                    if (!tag.equals(languageTag)) {
                         player.removeScoreboardTag(tag);
                         break;
 
                     } else
                         return false;
 
-            player.addScoreboardTag("locale=" + languageCode);
+            player.addScoreboardTag(languageTag);
             return true;
         }
 
@@ -185,7 +187,7 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
      * Gets the key of the first key-value pair found that contains localizedMessage as a value.
      *
      * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa).
-     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru).
+     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru)
      *
      * @return The key of the first key-value pair found that contains localizedMessage as a value, or null, if it isn't found.
      */
@@ -201,7 +203,7 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
     /**
      * Gets the key of the first key-value pair of the any language found that contains localizedMessage as a value.
      *
-     * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa).
+     * @param localizedMessage The message to look for. (e.x.: Weird Thing, ijo nasa)
      *
      * @return The key of the first key-value pair of any language found that contains localizedMessage as a value, or null, if it isn't found.
      */
@@ -218,8 +220,8 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
     /**
      * Gets a message in its localized form using its language and its base form.
      *
-     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru).
-     * @param baseMessage The base form of the message. (e.x.: entity.weird_thing.name).
+     * @param languageCode The code for the language to use. (e.x.: en_us, tok, ja, ru)
+     * @param baseMessage The base form of the message. (e.x.: entity.weird_thing.name)
      *
      * @return The localized form of this message. Will return the base message if no localized form is found.
      */
@@ -236,7 +238,7 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
      * For anything else it returns the localization of that message in the default locale.
      *
      * @param entity The entity to get the message for.
-     * @param baseMessage The base from of the message. (e.x.: entity.weird_thing.name).
+     * @param baseMessage The base from of the message. (e.x.: entity.weird_thing.name)
      *
      * @return The localized form of the message in the entity's locale, or the default, if its locale cannot be found.
      */
@@ -258,7 +260,7 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
      * For anything else it returns the localization of that message in the default locale.
      *
      * @param sender The CommandSender to get the message for.
-     * @param baseMessage The base from of the message. (e.x.: entity.weird_thing.name).
+     * @param baseMessage The base from of the message. (e.x.: entity.weird_thing.name)
      *
      * @return The localized form of the message in the sender's locale, or the default, if its locale cannot be found.
      */
@@ -285,10 +287,12 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
             // Gets the language chosen by the player.
             if (args.length > 1) {
                 StringBuilder bigArgument = new StringBuilder();
+                int lastIndex = args.length - 1;
+
                 for (int i = 0; i < args.length; i++) {
                     bigArgument.append(args[i]);
 
-                    if (i != args.length - 1)
+                    if (i != lastIndex)
                         bigArgument.append(" ");
                 }
 
@@ -310,7 +314,8 @@ public class LocalizedMessages implements CommandExecutor, TabCompleter {
                     player.sendMessage(ChatColor.RED + getMessage(languageCode, "command.setlocale.already_set"));
 
             } else
-                player.sendMessage(ChatColor.RED + getMessageFor(player, "command.setlocale.not_found").replaceFirst("%s", selectedLanguage));
+                player.sendMessage(ChatColor.RED + getMessageFor(player, "command.setlocale.not_found")
+                        .replaceAll("%s", selectedLanguage));
 
             return true;
 

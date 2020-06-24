@@ -3,7 +3,7 @@ version: ${project.version}
 main: pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.MainBoi
 api-version: 1.13
 authors: [Epiphany]
-description: Essential code for any server in existance :)
+description: Essential code for any server in existance ;)
 commands:
   capabilities:
     description: A command for micro-managing the capabilities system.

@@ -151,8 +151,8 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
             AttributeInstance movementSpeed = livingEntity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
             AttributeInstance flyingSpeed = livingEntity.getAttribute(Attribute.GENERIC_FLYING_SPEED);
 
-            AttributeHelper.addModifierSafely(movementSpeed, new AttributeModifier("COP:SE_FE-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-            AttributeHelper.addModifierSafely(flyingSpeed, new AttributeModifier("COP:SE_FE-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            AttributeHelper.addModifiersSafely(movementSpeed, new AttributeModifier("COP:SE_FE-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            AttributeHelper.addModifiersSafely(flyingSpeed, new AttributeModifier("COP:SE_FE-M2", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
 
             // Knock em' outta the sky, boys.
             if (livingEntity instanceof Player) {

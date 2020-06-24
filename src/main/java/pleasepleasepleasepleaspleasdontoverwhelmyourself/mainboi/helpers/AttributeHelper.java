@@ -5,38 +5,31 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.LivingEntity;
 
-// TODO Allow create a variant of addModifierSafely() that can apply multiple modifiers at once. Do the the same for addHealthModifierAndScale().
-
 /**
  * Code to help manage entity attributes.
  */
 public final class AttributeHelper {
     /**
-     * Adds an attribute modifier to an attribute only if there are no modifiers with the same name.
+     * Adds attribute modifiers to an attribute, skipping over those with the same name as a modifier that is already there.
      *
      * @param attribute The attribute to add the modifier to.
-     * @param attributeModifier The modifier to add.
-     *
-     * @return Whether or not the attribute was applied.
+     * @param attributeModifiers The modifiers to add.
      */
-    public static boolean addModifierSafely(AttributeInstance attribute, AttributeModifier attributeModifier) {
-        if (attribute != null) {
-            String attributeModifierName = attributeModifier.getName();
-            boolean alreadyHasModifier = false;
+    public static void addModifiersSafely(AttributeInstance attribute, AttributeModifier... attributeModifiers) {
+        if (attribute != null)
+            for (AttributeModifier attributeModifier : attributeModifiers) {
+                String attributeModifierName = attributeModifier.getName();
+                boolean alreadyHasModifier = false;
 
-            for (AttributeModifier possibleDuplicate : attribute.getModifiers())
-                if (possibleDuplicate.getName().equals(attributeModifierName)) {
-                    alreadyHasModifier = true;
-                    break;
-                }
+                for (AttributeModifier possibleDuplicate : attribute.getModifiers())
+                    if (possibleDuplicate.getName().equals(attributeModifierName)) {
+                        alreadyHasModifier = true;
+                        break;
+                    }
 
-            if (!alreadyHasModifier) {
-                attribute.addModifier(attributeModifier);
-                return true;
+                if (!alreadyHasModifier)
+                    attribute.addModifier(attributeModifier);
             }
-        }
-
-        return false;
     }
 
     /**
@@ -82,38 +75,40 @@ public final class AttributeHelper {
 
 
     /**
-     * Adds a modifier to a living entity's maxHealth attribute, if they have it, and scales their health accordingly.
-     * Only runs if there is no attribute modifiers by the same name.
+     * Adds modifiers to a living entity's maxHealth attribute, if they have it, and scales their health accordingly.
+     * Skips modifiers that have the same name as a modifier that is already there.
      *
      * @param livingEntity The living entity to add the modifier to.
-     * @param maxHealthModifier The modifier to add to the living entity's max health.
-     *
-     * @return Whether or not the modifier and health increase were successful
+     * @param maxHealthModifiers The modifiers to add to the living entity's max health.
      */
-    public static boolean addHealthModifierAndScale(LivingEntity livingEntity, AttributeModifier maxHealthModifier) {
+    public static void addHealthModifiersAndScale(LivingEntity livingEntity, AttributeModifier... maxHealthModifiers) {
         AttributeInstance maxHealth = livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
 
         if (maxHealth != null) {
-            String attributeModifierName = maxHealthModifier.getName();
-            boolean alreadyHasModifier = false;
+            double healthRatio = livingEntity.getHealth() / maxHealth.getValue();
+            boolean addedModifiers = false;
 
-            for (AttributeModifier possibleDuplicate : maxHealth.getModifiers())
-                if (possibleDuplicate.getName().equals(attributeModifierName)) {
-                    alreadyHasModifier = true;
-                    break;
+            // Adds modifiers.
+            for (AttributeModifier maxHealthModifier : maxHealthModifiers) {
+                String attributeModifierName = maxHealthModifier.getName();
+                boolean alreadyHasModifier = false;
+
+                for (AttributeModifier possibleDuplicate : maxHealth.getModifiers())
+                    if (possibleDuplicate.getName().equals(attributeModifierName)) {
+                        alreadyHasModifier = true;
+                        break;
+                    }
+
+                if (!alreadyHasModifier) {
+                    maxHealth.addModifier(maxHealthModifier);
+                    addedModifiers = true;
                 }
-
-            if (!alreadyHasModifier) {
-                double healthRatio = livingEntity.getHealth() / maxHealth.getValue();
-
-                maxHealth.addModifier(maxHealthModifier);
-                livingEntity.setHealth(healthRatio * maxHealth.getValue());
-
-                return true;
             }
-        }
 
-        return false;
+            // Scales health.
+            if (addedModifiers)
+                livingEntity.setHealth(maxHealth.getValue() * healthRatio);
+        }
     }
 
     /**

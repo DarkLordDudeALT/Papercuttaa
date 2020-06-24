@@ -25,7 +25,7 @@ import java.util.*;
  *
  * Ice elites slow entities they hit.
  * Ice elites slow entities they shoot.
- * Ice elites leave behind a ice bomb, which detonates for 150% of their damage after 2 seconds. Also applies freezing;
+ * Ice elites leave behind a ice bomb, which detonates for 150% of their damage after 2 seconds. Also applies freezing.
  */
 public class IceEliteCapability extends Capability implements Listener {
     public IceEliteCapability(String extraData) {
@@ -57,8 +57,8 @@ public class IceEliteCapability extends Capability implements Listener {
 
                 AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-                AttributeHelper.addHealthModifierAndScale(livingEntity, new AttributeModifier("COP_IE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-                AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_IE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addHealthModifiersAndScale(livingEntity, new AttributeModifier("COP_IE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addModifiersSafely(attackDamage, new AttributeModifier("COP_IE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
             }
 
             // Gives fire elites a title if they don't have a custom name already.

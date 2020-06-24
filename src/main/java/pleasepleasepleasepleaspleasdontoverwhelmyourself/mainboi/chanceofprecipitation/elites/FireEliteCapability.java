@@ -104,8 +104,8 @@ public class FireEliteCapability extends Capability implements Listener {
 
                 AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 
-                AttributeHelper.addHealthModifierAndScale(livingEntity, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-                AttributeHelper.addModifierSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addHealthModifiersAndScale(livingEntity, new AttributeModifier("COP_FE-M2", 3.7, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                AttributeHelper.addModifiersSafely(attackDamage, new AttributeModifier("COP_FE-M2", 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
             }
 
             // Gives fire elites a title if they don't have a custom name already.
