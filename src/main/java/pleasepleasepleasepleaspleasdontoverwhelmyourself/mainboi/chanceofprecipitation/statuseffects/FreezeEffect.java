@@ -11,6 +11,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -18,12 +19,12 @@ import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
-import org.bukkit.util.Vector;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.CapabilitiesCore;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.Capability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities.StatusEffectCapability;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.AttributeHelper;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.DeathMessageLists;
+import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.EntityAffectors;
 
 import java.util.Set;
 
@@ -108,10 +109,7 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
             entityLocation.setYaw(initialEntityYaw);
             entityLocation.setPitch(initialEntityPitch);
 
-            // To preserve velocity.
-            Vector velocity = entity.getVelocity();
-            entity.teleport(entityLocation);
-            entity.setVelocity(velocity);
+            EntityAffectors.retainingTeleport(entity, entityLocation);
         }
 
         // Executes low-health entities.
@@ -121,11 +119,13 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
             boolean wasPlayer = false;
 
             if (livingEntity instanceof Player) {
-                wasPlayer = true;
                 GameMode playerGameMode = ((Player) livingEntity).getGameMode();
 
-                if (playerGameMode.equals(GameMode.CREATIVE) || playerGameMode.equals(GameMode.SPECTATOR))
+                if (playerGameMode.equals(GameMode.CREATIVE) || playerGameMode.equals(GameMode.SPECTATOR)) {
                     validEntity = false;
+
+                } else
+                    wasPlayer = true;
             }
 
             if (validEntity) {
@@ -198,77 +198,66 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
 
 
     // Custom death messages.
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public static void onPlayerDeath(PlayerDeathEvent playerDeathEvent) {
-        if (!playerDeathEvent.isCancelled()) {
-            Player player = playerDeathEvent.getEntity();
+        Player player = playerDeathEvent.getEntity();
 
-            if (player.getScoreboardTags().contains("COP:SE_FE-PD")) {
-                playerDeathEvent.setDeathMessage(DeathMessageLists.buildRandomDeathMessage(DeathMessageLists.FREEZE_DEATH_MESSAGES, player.getDisplayName()));
-                player.removeScoreboardTag("COP:SE_FE-PD");
-            }
+        if (player.getScoreboardTags().contains("COP:SE_FE-PD")) {
+            playerDeathEvent.setDeathMessage(DeathMessageLists.buildRandomDeathMessage(DeathMessageLists.FREEZE_DEATH_MESSAGES, player.getDisplayName()));
+            player.removeScoreboardTag("COP:SE_FE-PD");
         }
     }
 
 
 
     // The following 7 event handlers prevent actions taken by those frozen.
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public static void onEntityJump(EntityJumpEvent entityJumpEvent) {
-        if (!entityJumpEvent.isCancelled()) {
-            LivingEntity livingEntity = entityJumpEvent.getEntity();
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
+        LivingEntity livingEntity = entityJumpEvent.getEntity();
+        Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
 
-            for (Capability capability : entityCapabilities)
-                if (capability instanceof FreezeEffect) {
-                    FreezeEffect freezeEffect = (FreezeEffect) capability;
-                    freezeEffect.setDuration((int) (freezeEffect.getDuration() * 0.95));
+        for (Capability capability : entityCapabilities)
+            if (capability instanceof FreezeEffect) {
+                FreezeEffect freezeEffect = (FreezeEffect) capability;
+                freezeEffect.setDuration((int) (freezeEffect.getDuration() * 0.95));
 
-                    entityJumpEvent.setCancelled(true);
+                entityJumpEvent.setCancelled(true);
 
-                    break;
-                }
-        }
+                break;
+            }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public static void onPlayerJump(PlayerJumpEvent playerJumpEvent) {
-        if (!playerJumpEvent.isCancelled()) {
-            Player player = playerJumpEvent.getPlayer();
-            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+        Player player = playerJumpEvent.getPlayer();
+        Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 
-            for (Capability capability : playerCapabilities)
-                if (capability instanceof FreezeEffect) {
-                    FreezeEffect freezeEffect = (FreezeEffect) capability;
-                    freezeEffect.setDuration(freezeEffect.getDuration() - 3);
+        for (Capability capability : playerCapabilities)
+            if (capability instanceof FreezeEffect) {
+                FreezeEffect freezeEffect = (FreezeEffect) capability;
+                freezeEffect.setDuration(freezeEffect.getDuration() - 3);
 
-                    playerJumpEvent.setCancelled(true);
+                playerJumpEvent.setCancelled(true);
 
-                    break;
-                }
-        }
+                break;
+            }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public static void onEntityHitEntity(EntityDamageByEntityEvent entityDamageByEntityEvent) {
-        if (!entityDamageByEntityEvent.isCancelled()) {
-            Entity attacker = entityDamageByEntityEvent.getDamager();
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(attacker);
+        Entity attacker = entityDamageByEntityEvent.getDamager();
+        Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(attacker);
 
-            for (Capability capability : entityCapabilities)
-                if (capability instanceof FreezeEffect) {
-                    entityDamageByEntityEvent.setCancelled(true);
-                    break;
-                }
-        }
+        for (Capability capability : entityCapabilities)
+            if (capability instanceof FreezeEffect) {
+                entityDamageByEntityEvent.setCancelled(true);
+                break;
+            }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public static void onPlayerInteract(PlayerInteractEvent playerInteractEvent) {
-        Event.Result blockInteract = playerInteractEvent.useInteractedBlock();
-        Event.Result itemInteract = playerInteractEvent.useItemInHand();
-
-        if (!blockInteract.equals(Event.Result.DENY) || !itemInteract.equals(Event.Result.DENY)) {
+        if (!playerInteractEvent.useInteractedBlock().equals(Event.Result.DENY) || !playerInteractEvent.useItemInHand().equals(Event.Result.DENY)) {
             Player player = playerInteractEvent.getPlayer();
             Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 
@@ -280,37 +269,33 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public static void onPlayerInteractEntity(PlayerInteractEntityEvent playerInteractEntityEvent) {
-        if (!playerInteractEntityEvent.isCancelled()) {
-            Player player = playerInteractEntityEvent.getPlayer();
-            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+        Player player = playerInteractEntityEvent.getPlayer();
+        Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 
-            for (Capability capability : playerCapabilities)
-                if (capability instanceof FreezeEffect) {
-                    playerInteractEntityEvent.setCancelled(true);
-                    break;
-                }
-        }
+        for (Capability capability : playerCapabilities)
+            if (capability instanceof FreezeEffect) {
+                playerInteractEntityEvent.setCancelled(true);
+                break;
+            }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public static void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent playerInteractAtEntityEvent) {
-        if (!playerInteractAtEntityEvent.isCancelled()) {
-            Player player = playerInteractAtEntityEvent.getPlayer();
-            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+        Player player = playerInteractAtEntityEvent.getPlayer();
+        Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 
-            for (Capability capability : playerCapabilities)
-                if (capability instanceof FreezeEffect) {
-                    playerInteractAtEntityEvent.setCancelled(true);
-                    break;
-                }
-        }
+        for (Capability capability : playerCapabilities)
+            if (capability instanceof FreezeEffect) {
+                playerInteractAtEntityEvent.setCancelled(true);
+                break;
+            }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public static void onPlayerToggleFlight(PlayerToggleFlightEvent playerToggleFlightEvent) {
-        if (!playerToggleFlightEvent.isCancelled() && playerToggleFlightEvent.isFlying()) {
+        if (playerToggleFlightEvent.isFlying()) {
             Player player = playerToggleFlightEvent.getPlayer();
             Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 

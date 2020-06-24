@@ -151,46 +151,42 @@ public class FireEliteCapability extends Capability implements Listener {
     /**
      * Makes all melee attacks from fire elites apply 160 ticks of fire. Equal to fire aspect II.
      */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void onEntityHitEntity(EntityDamageByEntityEvent entityDamageByEntityEvent) {
-        if (!entityDamageByEntityEvent.isCancelled()) {
-            Entity attacker = entityDamageByEntityEvent.getDamager();
-            Set<Capability> attackerCapabilities = CapabilitiesCore.getCapabilities(attacker);
+        Entity attacker = entityDamageByEntityEvent.getDamager();
+        Set<Capability> attackerCapabilities = CapabilitiesCore.getCapabilities(attacker);
 
-            for (Capability capability : attackerCapabilities)
-                if (capability instanceof FireEliteCapability) {
-                    Entity victim = entityDamageByEntityEvent.getEntity();
+        for (Capability capability : attackerCapabilities)
+            if (capability instanceof FireEliteCapability) {
+                Entity victim = entityDamageByEntityEvent.getEntity();
 
-                    victim.setFireTicks(victim.getFireTicks() + 160);
+                victim.setFireTicks(victim.getFireTicks() + 160);
 
-                    break;
-                }
-        }
+                break;
+            }
     }
 
     /**
      * Makes all arrows shot by fire elites be set aflame.
      */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void onEntityShootBow(EntityShootBowEvent entityShootBowEvent) {
-        if (!entityShootBowEvent.isCancelled()) {
-            LivingEntity livingEntity = entityShootBowEvent.getEntity();
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
+        LivingEntity livingEntity = entityShootBowEvent.getEntity();
+        Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
 
-            for (Capability capability : entityCapabilities)
-                if (capability instanceof FireEliteCapability) {
-                    Entity projectile = entityShootBowEvent.getProjectile();
+        for (Capability capability : entityCapabilities)
+            if (capability instanceof FireEliteCapability) {
+                Entity projectile = entityShootBowEvent.getProjectile();
 
-                    if (projectile.getFireTicks() <= 0)
-                        projectile.setFireTicks(2000);
+                if (projectile.getFireTicks() <= 0)
+                    projectile.setFireTicks(2000);
 
-                    if (!(livingEntity instanceof Player) && projectile instanceof AbstractArrow) {
-                        AbstractArrow arrow = (AbstractArrow) projectile;
-                        arrow.setDamage(arrow.getDamage() * 2);
-                    }
-
-                    break;
+                if (!(livingEntity instanceof Player) && projectile instanceof AbstractArrow) {
+                    AbstractArrow arrow = (AbstractArrow) projectile;
+                    arrow.setDamage(arrow.getDamage() * 2);
                 }
-        }
+
+                break;
+            }
     }
 }

@@ -73,122 +73,118 @@ public class ProgrammableGolemInstance implements Listener {
     /**
      * Displays a GUI for players interacting with programmable golems.
      */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void OnPlayerClickGolem(PlayerInteractAtEntityEvent playerInteractAtEntityEvent) {
-        if (!playerInteractAtEntityEvent.isCancelled()) {
-            Entity possibleGolem = playerInteractAtEntityEvent.getRightClicked();
+        Entity possibleGolem = playerInteractAtEntityEvent.getRightClicked();
 
-            if (possibleGolem instanceof ArmorStand && ProgrammableGolemHandler.GOLEM_QUEUE.containsKey(possibleGolem)) {
-                String customName = possibleGolem.getCustomName();
-                String title = customName == null ? "BotBoi #" + possibleGolem.getUniqueId().toString() + " Manager" : customName + " Manager";
+        if (possibleGolem instanceof ArmorStand && ProgrammableGolemHandler.GOLEM_QUEUE.containsKey(possibleGolem)) {
+            String customName = possibleGolem.getCustomName();
+            String title = customName == null ? "BotBoi #" + possibleGolem.getUniqueId().toString() + " Manager" : customName + " Manager";
 
-                Inventory golemGUI = Bukkit.createInventory(playerInteractAtEntityEvent.getPlayer(), 9, title);
-                ProgrammableGolemInstance programmableGolem = ProgrammableGolemHandler.GOLEM_QUEUE.get(possibleGolem);
+            Inventory golemGUI = Bukkit.createInventory(playerInteractAtEntityEvent.getPlayer(), 9, title);
+            ProgrammableGolemInstance programmableGolem = ProgrammableGolemHandler.GOLEM_QUEUE.get(possibleGolem);
 
 
-                // Adds items to GUI.
-                ItemStack powerButton;
-                ItemStack placeHolder = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-                ItemStack golemInventory = new ItemStack(Material.CHEST);
-                ItemStack codeManager = new ItemStack(Material.WRITTEN_BOOK);
+            // Adds items to GUI.
+            ItemStack powerButton;
+            ItemStack placeHolder = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+            ItemStack golemInventory = new ItemStack(Material.CHEST);
+            ItemStack codeManager = new ItemStack(Material.WRITTEN_BOOK);
 
-                if (programmableGolem.isOn) {
-                    powerButton = new ItemStack(Material.BLACK_TERRACOTTA);
+            if (programmableGolem.isOn) {
+                powerButton = new ItemStack(Material.BLACK_TERRACOTTA);
 
-                    ItemMeta powerButtonMeta = powerButton.getItemMeta();
-                    powerButtonMeta.setDisplayName("Stop Golem");
-                    powerButton.setItemMeta(powerButtonMeta);
+                ItemMeta powerButtonMeta = powerButton.getItemMeta();
+                powerButtonMeta.setDisplayName("Stop Golem");
+                powerButton.setItemMeta(powerButtonMeta);
 
-                } else {
-                    powerButton = new ItemStack(Material.GREEN_TERRACOTTA);
+            } else {
+                powerButton = new ItemStack(Material.GREEN_TERRACOTTA);
 
-                    ItemMeta powerButtonMeta = powerButton.getItemMeta();
-                    powerButtonMeta.setDisplayName("Start Golem");
-                    powerButton.setItemMeta(powerButtonMeta);
-                }
-
-                ItemMeta golemInventoryMeta = golemInventory.getItemMeta();
-                golemInventoryMeta.setDisplayName("Open Golem Inventory");
-                golemInventory.setItemMeta(golemInventoryMeta);
-
-                ItemMeta codeManagerMeta = codeManager.getItemMeta();
-                codeManagerMeta.setDisplayName("Open Golem Code Manager");
-                codeManager.setItemMeta(codeManagerMeta);
-
-                golemGUI.addItem(placeHolder, placeHolder, powerButton, placeHolder, placeHolder, golemInventory, codeManager, placeHolder, placeHolder);
-                System.out.println("Nyahello~");
-                playerInteractAtEntityEvent.setCancelled(true);
+                ItemMeta powerButtonMeta = powerButton.getItemMeta();
+                powerButtonMeta.setDisplayName("Start Golem");
+                powerButton.setItemMeta(powerButtonMeta);
             }
+
+            ItemMeta golemInventoryMeta = golemInventory.getItemMeta();
+            golemInventoryMeta.setDisplayName("Open Golem Inventory");
+            golemInventory.setItemMeta(golemInventoryMeta);
+
+            ItemMeta codeManagerMeta = codeManager.getItemMeta();
+            codeManagerMeta.setDisplayName("Open Golem Code Manager");
+            codeManager.setItemMeta(codeManagerMeta);
+
+            golemGUI.addItem(placeHolder, placeHolder, powerButton, placeHolder, placeHolder, golemInventory, codeManager, placeHolder, placeHolder);
+            System.out.println("Nyahello~");
+            playerInteractAtEntityEvent.setCancelled(true);
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void onInventoryClick(InventoryClickEvent inventoryClickEvent) {
-        if (!inventoryClickEvent.isCancelled()) {
-            String title = inventoryClickEvent.getView().getTitle();
+        String title = inventoryClickEvent.getView().getTitle();
 
-            if (title.contains("BotBoi") && title.contains("Manager")) {
-                ItemStack currentItem = inventoryClickEvent.getCurrentItem();
+        if (title.contains("BotBoi") && title.contains("Manager")) {
+            ItemStack currentItem = inventoryClickEvent.getCurrentItem();
 
-                if (currentItem != null) {
-                    ArmorStand possibleGolem = (ArmorStand) Bukkit.getEntity(
-                            UUID.fromString(title.split(" ", 3)[1].split("#", 2)[1])
-                    );
+            if (currentItem != null) {
+                ArmorStand possibleGolem = (ArmorStand) Bukkit.getEntity(
+                        UUID.fromString(title.split(" ", 3)[1].split("#", 2)[1])
+                );
 
-                    // Runs effects for the selected item.
-                    if (possibleGolem != null) {
-                        ProgrammableGolemInstance programmableGolem = ProgrammableGolemHandler.GOLEM_QUEUE.get(possibleGolem);
-                        Material currentItemType = currentItem.getType();
+                // Runs effects for the selected item.
+                if (possibleGolem != null) {
+                    ProgrammableGolemInstance programmableGolem = ProgrammableGolemHandler.GOLEM_QUEUE.get(possibleGolem);
+                    Material currentItemType = currentItem.getType();
 
-                        // Off button.
-                        if (currentItemType.equals(Material.BLACK_TERRACOTTA)) {
-                            programmableGolem.isOn = false;
-                            programmableGolem.isStopped = false;
+                    // Off button.
+                    if (currentItemType.equals(Material.BLACK_TERRACOTTA)) {
+                        programmableGolem.isOn = false;
+                        programmableGolem.isStopped = false;
 
-                            // Updates GUI.
-                            Inventory clickedInventory = inventoryClickEvent.getClickedInventory();
+                        // Updates GUI.
+                        Inventory clickedInventory = inventoryClickEvent.getClickedInventory();
 
-                            if (clickedInventory != null) {
-                                ItemStack onButton = new ItemStack(Material.GREEN_TERRACOTTA);
+                        if (clickedInventory != null) {
+                            ItemStack onButton = new ItemStack(Material.GREEN_TERRACOTTA);
 
-                                ItemMeta onButtonMeta = onButton.getItemMeta();
-                                onButtonMeta.setDisplayName("Start Golem");
-                                onButton.setItemMeta(onButtonMeta);
+                            ItemMeta onButtonMeta = onButton.getItemMeta();
+                            onButtonMeta.setDisplayName("Start Golem");
+                            onButton.setItemMeta(onButtonMeta);
 
-                                inventoryClickEvent.getClickedInventory().setItem(0, onButton);
-                            }
+                            inventoryClickEvent.getClickedInventory().setItem(0, onButton);
+                        }
 
                         // On button.
-                        } else if (currentItemType.equals(Material.GREEN_TERRACOTTA)) {
-                            programmableGolem.isOn = true;
-                            programmableGolem.isStopped = false;
+                    } else if (currentItemType.equals(Material.GREEN_TERRACOTTA)) {
+                        programmableGolem.isOn = true;
+                        programmableGolem.isStopped = false;
 
-                            // Updates GUI.
-                            Inventory clickedInventory = inventoryClickEvent.getClickedInventory();
+                        // Updates GUI.
+                        Inventory clickedInventory = inventoryClickEvent.getClickedInventory();
 
-                            if (clickedInventory != null) {
-                                ItemStack offButton = new ItemStack(Material.BLACK_TERRACOTTA);
+                        if (clickedInventory != null) {
+                            ItemStack offButton = new ItemStack(Material.BLACK_TERRACOTTA);
 
-                                ItemMeta offButtonMeta = offButton.getItemMeta();
-                                offButtonMeta.setDisplayName("Stop Golem");
-                                offButton.setItemMeta(offButtonMeta);
+                            ItemMeta offButtonMeta = offButton.getItemMeta();
+                            offButtonMeta.setDisplayName("Stop Golem");
+                            offButton.setItemMeta(offButtonMeta);
 
-                                inventoryClickEvent.getClickedInventory().setItem(0, offButton);
-                            }
+                            inventoryClickEvent.getClickedInventory().setItem(0, offButton);
+                        }
 
                         // Inventory button.
-                        } else if (currentItemType.equals(Material.CHEST)) {
-                            inventoryClickEvent.getWhoClicked().openInventory(programmableGolem.golemInventory);
+                    } else if (currentItemType.equals(Material.CHEST)) {
+                        inventoryClickEvent.getWhoClicked().openInventory(programmableGolem.golemInventory);
 
                         // Code manager button.
-                        } else if (currentItemType.equals(Material.WRITTEN_BOOK)) {
+                    } else if (currentItemType.equals(Material.WRITTEN_BOOK)) {
 
-                        }
                     }
                 }
-
-                inventoryClickEvent.setCancelled(true);
             }
+
+            inventoryClickEvent.setCancelled(true);
         }
     }
 }

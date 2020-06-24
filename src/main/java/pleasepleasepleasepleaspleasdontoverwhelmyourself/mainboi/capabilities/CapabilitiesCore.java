@@ -10,6 +10,7 @@ import org.bukkit.command.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -42,6 +43,8 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     private static final HashMap<Entity, Set<Capability>> ENTITY_CAPABILITY_QUEUE = new HashMap<>();
     // Stores registered capabilities, allowing easy String -> Capability conversion.
     private static final HashMap<String, Capability> CAPABILITIES_REGISTRY = new HashMap<>();
+    private static final long collectorRunInterval = 300;
+    private static final long assimilatorRunInterval = 600;
 
     public static void onEnable() {
         MainBoi mainBoi = MainBoi.getInstance();
@@ -62,8 +65,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
         }}.runTaskTimer(MainBoi.getInstance(), 51, collectorRunInterval);
     }
 
-    // The amount of time to wait between each run of the collector.
-    private static final long collectorRunInterval = 300;
+
 
     /**
      * Runs through the Entity Queue, getting rid of entities with no capabilities, and fixes discrepancies with it and entity tags.
@@ -132,9 +134,6 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
             ENTITY_CAPABILITY_QUEUE.remove(entity);
     }
 
-    // The amount of time to wait between each run of the assimilator.
-    private static final long assimilatorRunInterval = 600;
-
     /**
      * Runs through all loaded entities, looking for those with capabilities that are not in the queue, so that it can add them.
      */
@@ -172,7 +171,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
         String capabilityName = capability.getCapabilityName();
 
         if (CAPABILITIES_REGISTRY.containsKey(capabilityName))
-            throw new DuplicateRegistryNameException("Duplicate Capability Registry name: '" + capabilityName + "'.");
+            throw new DuplicateRegistryNameException("Duplicate Capability Registry name: '" + capabilityName + "'");
 
         CAPABILITIES_REGISTRY.put(capabilityName, capability);
     }
@@ -339,6 +338,7 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
      * Method may not be 100% accurate to tags.
      *
      * @param entity The entity to get capabilities from.
+     *
      * @return The capabilities an entity has.
      */
     public static Set<Capability> getCapabilities(Entity entity) {
@@ -442,16 +442,14 @@ public final class CapabilitiesCore implements Listener, CommandExecutor, TabCom
     /**
      * Removes volatile capabilities on player death.
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public static void onPlayerDeath(PlayerDeathEvent playerDeathEvent) {
-        if (!playerDeathEvent.isCancelled()) {
-            Player player = playerDeathEvent.getEntity();
-            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+        Player player = playerDeathEvent.getEntity();
+        Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
 
-            for (Capability capability : playerCapabilities)
-                if (capability.isVolatile())
-                    CapabilitiesCore.revokeCapability(player, capability);
-        }
+        for (Capability capability : playerCapabilities)
+            if (capability.isVolatile())
+                CapabilitiesCore.revokeCapability(player, capability);
     }
 
 

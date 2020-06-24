@@ -96,30 +96,28 @@ public class IceEliteCapability extends Capability implements Listener {
     /**
      * Makes all melee and ranged attacks from ice elites apply slowness VI for 1.5 seconds.
      */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void onEntityHitEntity(EntityDamageByEntityEvent entityDamageByEntityEvent) {
-        if (!entityDamageByEntityEvent.isCancelled()) {
-            Entity victim = entityDamageByEntityEvent.getEntity();
+        Entity victim = entityDamageByEntityEvent.getEntity();
 
-            if (victim instanceof LivingEntity) {
-                Entity attacker = entityDamageByEntityEvent.getDamager();
-                LivingEntity livingVictim = (LivingEntity) entityDamageByEntityEvent.getEntity();
+        if (victim instanceof LivingEntity) {
+            Entity attacker = entityDamageByEntityEvent.getDamager();
+            LivingEntity livingVictim = (LivingEntity) entityDamageByEntityEvent.getEntity();
 
-                if (attacker.getScoreboardTags().contains("COP_IE-P")) {
-                    livingVictim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 3, false, true, true));
+            if (attacker.getScoreboardTags().contains("COP_IE-P")) {
+                livingVictim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 3, false, true, true));
 
-                    if (attacker instanceof Player)
-                        attacker.removeScoreboardTag("COP_IE-P");
+                if (attacker instanceof Player)
+                    attacker.removeScoreboardTag("COP_IE-P");
 
-                } else {
-                    Set<Capability> attackerCapabilities = CapabilitiesCore.getCapabilities(attacker);
+            } else {
+                Set<Capability> attackerCapabilities = CapabilitiesCore.getCapabilities(attacker);
 
-                    for (Capability capability : attackerCapabilities)
-                        if (capability instanceof IceEliteCapability) {
-                            livingVictim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 3, false, true, true));
-                            break;
-                        }
-                }
+                for (Capability capability : attackerCapabilities)
+                    if (capability instanceof IceEliteCapability) {
+                        livingVictim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 3, false, true, true));
+                        break;
+                    }
             }
         }
     }
@@ -127,63 +125,59 @@ public class IceEliteCapability extends Capability implements Listener {
     /**
      * Marks all arrows shot by ice elites.
      */
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void onEntityShootBow(EntityShootBowEvent entityShootBowEvent) {
-        if (!entityShootBowEvent.isCancelled()) {
-            LivingEntity livingEntity = entityShootBowEvent.getEntity();
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
+        LivingEntity livingEntity = entityShootBowEvent.getEntity();
+        Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
 
-            for (Capability capability : entityCapabilities)
-                if (capability instanceof IceEliteCapability) {
-                    Entity projectile = entityShootBowEvent.getProjectile();
+        for (Capability capability : entityCapabilities)
+            if (capability instanceof IceEliteCapability) {
+                Entity projectile = entityShootBowEvent.getProjectile();
 
-                    projectile.addScoreboardTag("COP_IE-P");
+                projectile.addScoreboardTag("COP_IE-P");
 
-                    if (!(livingEntity instanceof Player) && projectile instanceof AbstractArrow) {
-                        AbstractArrow arrow = (AbstractArrow) projectile;
-                        arrow.setDamage(arrow.getDamage() * 2);
-                    }
-
-                    break;
+                if (!(livingEntity instanceof Player) && projectile instanceof AbstractArrow) {
+                    AbstractArrow arrow = (AbstractArrow) projectile;
+                    arrow.setDamage(arrow.getDamage() * 2);
                 }
-        }
+
+                break;
+            }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public static void onEntityDeath(EntityDeathEvent entityDeathEvent) {
-        if (!entityDeathEvent.isCancelled()) {
-            LivingEntity livingEntity = entityDeathEvent.getEntity();
-            Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
+        LivingEntity livingEntity = entityDeathEvent.getEntity();
+        Set<Capability> entityCapabilities = CapabilitiesCore.getCapabilities(livingEntity);
 
-            for (Capability capability : entityCapabilities)
-                if (capability instanceof IceEliteCapability) {
-                    Location newLocation = livingEntity.getLocation();
-                    newLocation.setY(newLocation.getY() + livingEntity.getHeight() / 2);
+        for (Capability capability : entityCapabilities)
+            if (capability instanceof IceEliteCapability) {
+                Location newLocation = livingEntity.getLocation();
+                newLocation.setY(newLocation.getY() + livingEntity.getHeight() / 2);
 
-                    ArmorStand armorStand = (ArmorStand) livingEntity.getWorld().spawnEntity(newLocation, EntityType.ARMOR_STAND);
+                ArmorStand armorStand = (ArmorStand) livingEntity.getWorld().spawnEntity(newLocation, EntityType.ARMOR_STAND);
 
-                    armorStand.setMarker(true);
-                    armorStand.setVisible(false);
-                    armorStand.setCanTick(false);
-
-
-                    AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
-                    double damage;
-
-                    if (attackDamage != null) {
-                        damage = attackDamage.getValue();
-                        damage *= 1.5;
-
-                        if (livingEntity.hasPotionEffect(PotionEffectType.WEAKNESS))
-                            damage *= 0.6;
-
-                    } else
-                        damage = 2;
+                armorStand.setMarker(true);
+                armorStand.setVisible(false);
+                armorStand.setCanTick(false);
 
 
-                    CapabilitiesCore.assignCapability(armorStand, new IceBombCapability("0," + damage, livingEntity));
-                }
-        }
+                AttributeInstance attackDamage = livingEntity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+                double damage;
+
+                if (attackDamage != null) {
+                    damage = attackDamage.getValue();
+                    damage *= 1.5;
+
+                    if (livingEntity.hasPotionEffect(PotionEffectType.WEAKNESS))
+                        damage *= 0.6;
+
+                } else
+                    damage = 2;
+
+
+                CapabilitiesCore.assignCapability(armorStand, new IceBombCapability("0," + damage, livingEntity));
+            }
     }
 
 
