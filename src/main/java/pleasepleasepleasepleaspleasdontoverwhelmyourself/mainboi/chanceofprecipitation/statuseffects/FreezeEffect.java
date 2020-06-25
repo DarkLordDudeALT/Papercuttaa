@@ -45,9 +45,9 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
 
         String[] splitExtraData = extraData.split(",");
 
-        if (splitExtraData.length >= 5) {
+        if (splitExtraData.length >= 4) {
             try {
-                initialEntityYaw = Float.parseFloat(splitExtraData[5]);
+                initialEntityYaw = Float.parseFloat(splitExtraData[4]);
                 initialYawGiven = true;
 
             } catch (NumberFormatException ignore) {
@@ -60,9 +60,9 @@ public class FreezeEffect extends StatusEffectCapability implements Listener {
             initialYawGiven = false;
         }
 
-        if (splitExtraData.length >= 6) {
+        if (splitExtraData.length >= 5) {
             try {
-                initialEntityPitch = Float.parseFloat(splitExtraData[6]);
+                initialEntityPitch = Float.parseFloat(splitExtraData[5]);
                 initialPitchGiven = true;
 
             } catch (NumberFormatException ignore) {

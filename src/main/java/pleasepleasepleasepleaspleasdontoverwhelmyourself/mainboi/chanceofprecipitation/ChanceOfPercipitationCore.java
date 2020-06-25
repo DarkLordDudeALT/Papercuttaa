@@ -34,7 +34,7 @@ public final class ChanceOfPercipitationCore {
             IceEliteCapability.IceBombCapability iceBombCapability = new IceEliteCapability.IceBombCapability("0,2", null);
             CapabilitiesCore.registerCapability(iceBombCapability);
 
-            FreezeEffect freezeEffect = new FreezeEffect("20,0,false,true,true,0,0");
+            FreezeEffect freezeEffect = new FreezeEffect("20,0,false,true,0,0");
             CapabilitiesCore.registerCapability(freezeEffect);
             pluginManager.registerEvents(freezeEffect, mainBoi);
 

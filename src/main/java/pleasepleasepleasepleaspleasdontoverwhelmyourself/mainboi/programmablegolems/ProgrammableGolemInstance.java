@@ -42,8 +42,8 @@ public class ProgrammableGolemInstance implements Listener {
     }
 
     protected void tick() {
-        for (Thread thread : threads)
-            thread.runThread();
+        for (int i = 0; i < threads.size(); i++)
+            threads.get(i).runThread();
     }
 
     protected void synchronizedTick() {

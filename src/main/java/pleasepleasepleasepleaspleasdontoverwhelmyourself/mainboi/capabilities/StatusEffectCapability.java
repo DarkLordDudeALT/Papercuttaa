@@ -1,9 +1,15 @@
 package pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.capabilities;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import pleasepleasepleasepleaspleasdontoverwhelmyourself.mainboi.helpers.LocalizedMessages;
+
+import java.util.Set;
 
 /**
  * Represents a status effect, much like potion effects.
@@ -21,7 +27,6 @@ public abstract class StatusEffectCapability extends Capability {
     protected byte amplifier;
     protected boolean ambient;
     protected boolean particles;
-    protected boolean notify;
 
     public StatusEffectCapability(String extraData) {
         super(extraData);
@@ -61,22 +66,45 @@ public abstract class StatusEffectCapability extends Capability {
 
         } else
             particles = true;
+    }
 
-        if (splitExtraData.length >= 5) {
-            notify = Boolean.parseBoolean(splitExtraData[4]);
-
-        } else
-            notify = true;
+    /**
+     * Returns the base name for an effect. (e.x.: effect.generic_effect.name).
+     */
+    public String getBaseName() {
+        return null;
     }
 
     @Override
     public String getExtraData() {
-        return duration + "," + amplifier + "," + ambient + "," + particles + "," + notify;
+        return duration + "," + amplifier + "," + ambient + "," + particles;
     }
 
     @Override
     public boolean isVolatile() {
         return true;
+    }
+
+    /**
+     * Returns true if the status effect is lost when a player drinks milk.
+     *
+     * Override to set the milky flag.
+     *
+     * @return Whether or not the capability is milky.
+     */
+    public boolean isMilky() {
+        return false;
+    }
+
+    /**
+     * Returns true if the entity will be notified when this status effect is given and removed.
+     *
+     * Override to choose whether or not to notify.
+     *
+     * @return Whether or not the entity will be notified of when they have this capability.
+     */
+    public boolean willNotify() {
+        return false;
     }
 
 
@@ -113,21 +141,6 @@ public abstract class StatusEffectCapability extends Capability {
         this.particles = particles;
     }
 
-    public boolean willNotify() {
-        return notify;
-    }
-
-    public void setNotify(boolean notify) {
-        this.notify = notify;
-    }
-
-    /**
-     * Returns the base name for an effect. (e.x.: effect.generic_effect.name).
-     */
-    public String getBaseName() {
-        return null;
-    }
-
 
 
     @Override
@@ -142,7 +155,7 @@ public abstract class StatusEffectCapability extends Capability {
 
     @Override
     public void onAssignment(Entity entity) {
-        if (notify && entity instanceof Player) {
+        if (willNotify() && entity instanceof Player) {
             String displayName = LocalizedMessages.getMessageFor(entity, getBaseName());
 
             entity.sendMessage(LocalizedMessages.getMessageFor(entity, "capability.statuseffect.notify_give")
@@ -153,11 +166,27 @@ public abstract class StatusEffectCapability extends Capability {
 
     @Override
     public void onRevoke(Entity entity) {
-        if (notify && entity instanceof Player) {
+        if (willNotify() && entity instanceof Player) {
             String displayName = LocalizedMessages.getMessageFor(entity, getBaseName());
 
             entity.sendMessage(LocalizedMessages.getMessageFor(entity, "capability.statuseffect.notify_remove")
                     .replaceAll("%s", "" + ChatColor.YELLOW + ChatColor.ITALIC + (displayName == null ? getCapabilityName() : displayName) + (amplifier != 0 ? " " + String.valueOf(amplifier) : "")));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public static void onDrinkMilk(PlayerItemConsumeEvent playerItemConsumeEvent) {
+        if (playerItemConsumeEvent.getItem().getType().equals(Material.MILK_BUCKET)) {
+            Player player = playerItemConsumeEvent.getPlayer();
+            Set<Capability> playerCapabilities = CapabilitiesCore.getCapabilities(player);
+
+            for (Capability playerCapability : playerCapabilities)
+                if (playerCapability instanceof StatusEffectCapability) {
+                    StatusEffectCapability statusEffect = (StatusEffectCapability) playerCapability;
+
+                    if (statusEffect.isMilky())
+                        CapabilitiesCore.revokeCapability(player, statusEffect);
+                }
         }
     }
 }

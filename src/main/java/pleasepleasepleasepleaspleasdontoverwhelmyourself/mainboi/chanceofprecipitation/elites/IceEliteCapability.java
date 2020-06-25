@@ -319,7 +319,7 @@ public class IceEliteCapability extends Capability implements Listener {
                                     }
 
                                     if (validEntity)
-                                        CapabilitiesCore.assignCapability(livingVictim, new FreezeEffect("30,0,false,true,false"));
+                                        CapabilitiesCore.assignCapability(livingVictim, new FreezeEffect("30,0,false,true"));
                                 }
 
                             } else if (livingVictim instanceof Player)
